@@ -52,13 +52,25 @@ jobs:
           unzip -q "$ARCHIVE" -d project
           PROJECT_DIR="$(find project -type f -name settings.gradle -printf '%h\n' -quit)"
           test -n "$PROJECT_DIR"
-          mkdir -p "$PROJECT_DIR/app/src/main/res/drawable"
-          cp "$GITHUB_WORKSPACE/branding/ic_launcher.xml" "$PROJECT_DIR/app/src/main/res/drawable/ic_launcher.xml"
-          python3 - <<'PY'
+          MANIFEST="$(find "$PROJECT_DIR" -path '*/src/main/AndroidManifest.xml' -type f -print -quit)"
+          test -n "$MANIFEST"
+          MAIN_DIR="$(dirname "$MANIFEST")"
+          mkdir -p "$MAIN_DIR/res/drawable"
+          cp "$GITHUB_WORKSPACE/branding/ic_launcher.xml" "$MAIN_DIR/res/drawable/ic_launcher.xml"
+          MANIFEST="$MANIFEST" python3 - <<'PY'
+          import os
           from pathlib import Path
-          manifest = Path('app/src/main/AndroidManifest.xml')
+          manifest = Path(os.environ["MANIFEST"])
           content = manifest.read_text()
-          content = content.replace('android:label="ANAS Studio"', 'android:label="ANAS Studio"\\n        android:icon="@drawable/ic_launcher"\\n        android:roundIcon="@drawable/ic_launcher"')
+          start = content.find("<application")
+          if start < 0:
+              raise SystemExit("No application element in AndroidManifest.xml")
+          end = content.find(">", start)
+          if end < 0:
+              raise SystemExit("Malformed application element")
+          tag = content[start:end]
+          if "android:icon=" not in tag:
+              content = content[:end] + '\\n        android:icon="@drawable/ic_launcher"\\n        android:roundIcon="@drawable/ic_launcher"' + content[end:]
           manifest.write_text(content)
           PY
           cd "$PROJECT_DIR"
