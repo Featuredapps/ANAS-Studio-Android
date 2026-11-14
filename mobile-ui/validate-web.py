@@ -14,6 +14,10 @@ required = [
     "function importStudioBackup(event)",
     "function updateScriptEditorMetrics()",
     "function restoreProjectAudioAssets()",
+    "function saveProjectAudioAsset(",
+    "function scheduleStudioAutosave()",
+    "window.addEventListener('pagehide'",
+    "PROJECT_AUDIO_STORE.set = function(projectId, audio)",
     "function startCompleteRender(",
 ]
 missing = [item for item in required if item not in html]
