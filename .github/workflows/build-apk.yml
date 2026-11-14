@@ -139,6 +139,18 @@ jobs:
           grep -q 'MediaStore.MediaColumns.IS_PENDING' "$MAIN_ACTIVITY"
                     HTML_FILE="$(find "$PROJECT_DIR" -path '*/assets/index.html' -type f -print -quit)"
           test -n "$HTML_FILE"
+          HTML_FILE="$HTML_FILE" python3 - <<'PY'
+          import os
+          from pathlib import Path
+          p = Path(os.environ["HTML_FILE"])
+          s = p.read_text()
+          old = "reader.result.toString().split(',')[1]"
+          new = "reader.result.toString().substring(reader.result.toString().lastIndexOf(',') + 1)"
+          count = s.count(old)
+          if count < 2:
+              raise SystemExit(f"Expected both Android save callbacks, found {count}")
+          p.write_text(s.replace(old, new))
+          PY
           cp "$GITHUB_WORKSPACE/mobile-ui/mobile.css" "$(dirname "$HTML_FILE")/mobile.css"
           HTML_FILE="$HTML_FILE" python3 - <<'PY'
           import os
