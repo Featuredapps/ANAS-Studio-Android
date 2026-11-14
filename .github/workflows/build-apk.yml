@@ -73,7 +73,71 @@ jobs:
               content = content[:end] + '\n        android:icon="@drawable/ic_launcher"\n        android:roundIcon="@drawable/ic_launcher"' + content[end:]
           manifest.write_text(content)
           PY
-          HTML_FILE="$(find "$PROJECT_DIR" -path '*/assets/index.html' -type f -print -quit)"
+          MAIN_ACTIVITY="$(find "$PROJECT_DIR" -path '*/src/main/java/com/anasgdxj/studio/MainActivity.java' -type f -print -quit)"
+          test -n "$MAIN_ACTIVITY"
+          MAIN_ACTIVITY="$MAIN_ACTIVITY" python3 - <<'PY'
+          import os
+          from pathlib import Path
+          p = Path(os.environ["MAIN_ACTIVITY"])
+          s = p.read_text()
+          start = s.find("@JavascriptInterface public void saveBase64File(")
+          marker = "\n    }\n\n    private void toast"
+          end = s.find(marker, start)
+          if start < 0 or end < 0:
+              raise SystemExit("Could not locate saveBase64File method for safe MediaStore patch")
+          replacement = """@JavascriptInterface public void saveBase64File(String base64, String mime, String name) {
+                  if (base64 == null || base64.length() > 180_000_000) {
+                      toast("حجم الملف أكبر من الحد المسموح");
+                      return;
+                  }
+                  Uri savedUri = null;
+                  try {
+                      byte[] bytes = Base64.decode(base64, Base64.DEFAULT);
+                      String safeName = name == null ? "anas_export.bin" : name.replaceAll("[^A-Za-z0-9._-]", "_");
+                      String contentType = (mime == null || mime.trim().isEmpty()) ? "application/octet-stream" : mime;
+                      boolean isVideo = contentType.startsWith("video/");
+                      boolean isAudio = contentType.startsWith("audio/");
+                      Uri collection;
+                      String folder;
+                      if (isVideo) {
+                          collection = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
+                          folder = Environment.DIRECTORY_MOVIES + "/ANAS Studio";
+                      } else if (isAudio) {
+                          collection = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+                          folder = Environment.DIRECTORY_MUSIC + "/ANAS Studio";
+                      } else {
+                          collection = MediaStore.Downloads.EXTERNAL_CONTENT_URI;
+                          folder = Environment.DIRECTORY_DOWNLOADS + "/ANAS Studio";
+                      }
+                      ContentValues values = new ContentValues();
+                      values.put(MediaStore.MediaColumns.DISPLAY_NAME, safeName);
+                      values.put(MediaStore.MediaColumns.MIME_TYPE, contentType);
+                      values.put(MediaStore.MediaColumns.RELATIVE_PATH, folder);
+                      values.put(MediaStore.MediaColumns.IS_PENDING, 1);
+                      savedUri = getContentResolver().insert(collection, values);
+                      if (savedUri == null) throw new Exception("تعذر إنشاء ملف الحفظ");
+                      try (OutputStream out = getContentResolver().openOutputStream(savedUri, "w")) {
+                          if (out == null) throw new Exception("تعذر فتح ملف الحفظ");
+                          out.write(bytes);
+                          out.flush();
+                      }
+                      ContentValues ready = new ContentValues();
+                      ready.put(MediaStore.MediaColumns.IS_PENDING, 0);
+                      getContentResolver().update(savedUri, ready, null, null);
+                      String location = isVideo ? "Movies/ANAS Studio" : (isAudio ? "Music/ANAS Studio" : "Downloads/ANAS Studio");
+                      toast("تم حفظ الملف بنجاح في " + location);
+                  } catch (Exception e) {
+                      if (savedUri != null) {
+                          try { getContentResolver().delete(savedUri, null, null); } catch (Exception ignored) {}
+                      }
+                      toast("فشل حفظ الملف: " + e.getMessage());
+                  }
+              }"""
+          p.write_text(s[:start] + replacement + s[end:])
+          PY
+          MAIN_ACTIVITY="$(find "$PROJECT_DIR" -path '*/src/main/java/com/anasgdxj/studio/MainActivity.java' -type f -print -quit)"
+          grep -q 'MediaStore.MediaColumns.IS_PENDING' "$MAIN_ACTIVITY"
+                    HTML_FILE="$(find "$PROJECT_DIR" -path '*/assets/index.html' -type f -print -quit)"
           test -n "$HTML_FILE"
           cp "$GITHUB_WORKSPACE/mobile-ui/mobile.css" "$(dirname "$HTML_FILE")/mobile.css"
           HTML_FILE="$HTML_FILE" python3 - <<'PY'
