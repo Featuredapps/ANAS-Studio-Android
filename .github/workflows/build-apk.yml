@@ -53,6 +53,10 @@ jobs:
           echo "KEYSTORE_FILE=$RUNNER_TEMP/anas-studio-release.jks" >> "$GITHUB_ENV"
 
       - name: Extract project and build APK
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         shell: bash
         run: |
           set -euo pipefail
