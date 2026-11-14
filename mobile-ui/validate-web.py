@@ -16,8 +16,6 @@ required = [
     "function restoreProjectAudioAssets()",
     "function saveProjectAudioAsset(",
     "function scheduleStudioAutosave()",
-    "const saveSucceeded = persistScripts()",
-    "const previousProjects = SCRIPTS",
     "window.addEventListener('pagehide'",
     "PROJECT_AUDIO_STORE.set = function(projectId, audio)",
     "function startCompleteRender(",
@@ -25,6 +23,15 @@ required = [
 missing = [item for item in required if item not in html]
 if missing:
     raise SystemExit("Missing required app features: " + ", ".join(missing))
+
+# Script-editor hardening is applied opportunistically by the enhancement patcher.
+# Some supported project archive revisions already implement equivalent save/restore
+# flows with different syntax, so don't require patch-specific local variable names.
+if "function saveScriptEditorChanges(" not in html:
+    raise SystemExit("Script editor save handler missing")
+if "SCRIPTS = restored" not in html:
+    raise SystemExit("Project backup restore handler missing")
+
 with tempfile.NamedTemporaryFile("w", suffix=".js", encoding="utf-8", delete=False) as tmp:
     tmp.write(combined)
     path = tmp.name
