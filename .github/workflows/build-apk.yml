@@ -42,6 +42,16 @@ jobs:
         with:
           gradle-version: '8.9'
 
+      - name: Prepare stable signing key
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          set -euo pipefail
+          test -n "$ANDROID_KEYSTORE_BASE64"
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/anas-studio-release.jks"
+          test -s "$RUNNER_TEMP/anas-studio-release.jks"
+          echo "KEYSTORE_FILE=$RUNNER_TEMP/anas-studio-release.jks" >> "$GITHUB_ENV"
+
       - name: Extract project and build APK
         shell: bash
         run: |
@@ -162,9 +172,45 @@ jobs:
           content = content.replace("</head>", '  <link rel="stylesheet" href="mobile.css">\n</head>', 1)
           html.write_text(content)
           PY
+          APP_GRADLE="$PROJECT_DIR/app/build.gradle" python3 - <<'PY'
+          import os
+          from pathlib import Path
+          p = Path(os.environ["APP_GRADLE"])
+          run_number = int(os.environ.get("GITHUB_RUN_NUMBER", "1"))
+          p.write_text("""plugins { id 'com.android.application' }
+
+android {
+    namespace 'com.anasgdxj.studio'
+    compileSdk 35
+    defaultConfig {
+        applicationId 'com.anasgdxj.studio'
+        minSdk 29
+        targetSdk 35
+        versionCode %d
+        versionName '1.0.%d'
+    }
+    signingConfigs {
+        release {
+            storeFile file(System.getenv('KEYSTORE_FILE'))
+            storePassword System.getenv('ANDROID_KEYSTORE_PASSWORD')
+            keyAlias System.getenv('ANDROID_KEY_ALIAS')
+            keyPassword System.getenv('ANDROID_KEY_PASSWORD')
+        }
+    }
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled false
+        }
+    }
+}
+
+dependencies { implementation 'androidx.webkit:webkit:1.12.1' }
+""" % (run_number, run_number))
+          PY
           cd "$PROJECT_DIR"
-          gradle --no-daemon assembleDebug
-          install -D app/build/outputs/apk/debug/app-debug.apk "$GITHUB_WORKSPACE/app-debug.apk"
+          gradle --no-daemon assembleRelease
+          install -D app/build/outputs/apk/release/app-release.apk "$GITHUB_WORKSPACE/app-debug.apk"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
