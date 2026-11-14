@@ -189,8 +189,8 @@ jobs:
               if not m:
                   raise SystemExit("defaultConfig block missing in app/build.gradle")
               s = s[:m.end()] + f"\n        versionCode {run_number}" + s[m.end():]
-          if re.search(r'\\bversionName\\s+[\\\'"]', s):
-              s = re.sub(r'\\bversionName\\s+[\\\'"][^\\\'"]*[\\\'"]', f"versionName '1.0.{run_number}'", s, count=1)
+          if re.search(r'\bversionName\s+[\'"]', s):
+              s = re.sub(r'\bversionName\s+[\'"][^\'"]*[\'"]', f"versionName '1.0.{run_number}'", s, count=1)
           p.write_text(s)
           PY
           cd "$PROJECT_DIR"
