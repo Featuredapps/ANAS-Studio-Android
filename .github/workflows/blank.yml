@@ -306,7 +306,7 @@ jobs:
               }
 
           '''
-          if "createAnimatedSplash()" not in s:
+          if "private View createAnimatedSplash()" not in s:
               anchor = "    @Override protected void onActivityResult"
               if anchor not in s:
                   raise SystemExit("Could not find activity-result insertion point")
