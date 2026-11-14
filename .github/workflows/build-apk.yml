@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -173,3 +173,18 @@ jobs:
           path: app-debug.apk
           if-no-files-found: error
           retention-days: 7
+
+      - name: Publish latest APK release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: ANAS Studio - Latest APK
+          body: |
+            أحدث نسخة مستقرة من تطبيق ANAS Studio.
+            يتم تحديث هذا الإصدار تلقائياً مع كل بناء ناجح على الفرع main.
+          files: app-debug.apk
+          overwrite_files: true
+          make_latest: true
+          draft: false
+          prerelease: false
+
