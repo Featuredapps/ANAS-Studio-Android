@@ -73,6 +73,19 @@ jobs:
               content = content[:end] + '\\n        android:icon="@drawable/ic_launcher"\\n        android:roundIcon="@drawable/ic_launcher"' + content[end:]
           manifest.write_text(content)
           PY
+          HTML_FILE="$(find "$PROJECT_DIR" -path '*/assets/index.html' -type f -print -quit)"
+          test -n "$HTML_FILE"
+          cp "$GITHUB_WORKSPACE/mobile-ui/mobile.css" "$(dirname "$HTML_FILE")/mobile.css"
+          HTML_FILE="$HTML_FILE" python3 - <<'PY'
+          import os
+          from pathlib import Path
+          html = Path(os.environ["HTML_FILE"])
+          content = html.read_text()
+          if "</head>" not in content:
+              raise SystemExit("HTML head closing tag not found")
+          content = content.replace("</head>", '  <link rel="stylesheet" href="mobile.css">\\n</head>', 1)
+          html.write_text(content)
+          PY
           cd "$PROJECT_DIR"
           gradle --no-daemon assembleDebug
           install -D app/build/outputs/apk/debug/app-debug.apk "$GITHUB_WORKSPACE/app-debug.apk"
