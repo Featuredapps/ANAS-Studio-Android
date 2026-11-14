@@ -195,3 +195,5 @@ if old_listener in s:
     s=s.replace(old_listener, backup_js, 1)
 if 'function exportStudioBackup()' not in s:
     raise SystemExit('backup code insertion failed')
+
+p.write_text(s)
