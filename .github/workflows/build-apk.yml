@@ -182,13 +182,13 @@ jobs:
           p = Path(os.environ["APP_GRADLE"])
           s = p.read_text()
           run_number = int(os.environ.get("GITHUB_RUN_NUMBER", "1"))
-          if re.search(r'\\bversionCode\\s+\\d+', s):
-              s = re.sub(r'\\bversionCode\\s+\\d+', f'versionCode {run_number}', s, count=1)
+          if re.search(r'\bversionCode\s+\d+', s):
+              s = re.sub(r'\bversionCode\s+\d+', f'versionCode {run_number}', s, count=1)
           else:
-              m = re.search(r'defaultConfig\\s*\\{', s)
+              m = re.search(r'defaultConfig\s*\{', s)
               if not m:
                   raise SystemExit("defaultConfig block missing in app/build.gradle")
-              s = s[:m.end()] + f"\\n        versionCode {run_number}" + s[m.end():]
+              s = s[:m.end()] + f"\n        versionCode {run_number}" + s[m.end():]
           if re.search(r'\\bversionName\\s+[\\\'"]', s):
               s = re.sub(r'\\bversionName\\s+[\\\'"][^\\\'"]*[\\\'"]', f"versionName '1.0.{run_number}'", s, count=1)
           p.write_text(s)
