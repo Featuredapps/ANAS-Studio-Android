@@ -171,6 +171,148 @@ jobs:
           PY
           MAIN_ACTIVITY="$(find "$PROJECT_DIR" -path '*/src/main/java/com/anasgdxj/studio/MainActivity.java' -type f -print -quit)"
           grep -q 'MediaStore.MediaColumns.IS_PENDING' "$MAIN_ACTIVITY"
+          MAIN_ACTIVITY="$(find "$PROJECT_DIR" -path '*/src/main/java/com/anasgdxj/studio/MainActivity.java' -type f -print -quit)"
+          MAIN_ACTIVITY="$MAIN_ACTIVITY" python3 - <<'PY'
+          import os
+          from pathlib import Path
+          p = Path(os.environ["MAIN_ACTIVITY"])
+          s = p.read_text()
+          imports = [
+              "import android.view.Gravity;",
+              "import android.widget.FrameLayout;",
+              "import android.widget.LinearLayout;",
+              "import android.widget.TextView;",
+              "import android.graphics.Color;",
+              "import android.graphics.Typeface;",
+              "import android.graphics.drawable.GradientDrawable;",
+              "import android.animation.ObjectAnimator;",
+              "import android.animation.ValueAnimator;",
+              "import android.view.animation.DecelerateInterpolator;",
+              "import android.os.Handler;",
+              "import android.os.Looper;",
+          ]
+          for item in imports:
+              if item not in s:
+                  s = s.replace("import android.view.View;", "import android.view.View;\n" + item, 1)
+          fields = """    private FrameLayout rootLayout;
+              private View splashOverlay;
+              private final Handler splashHandler = new Handler(Looper.getMainLooper());
+          """
+          s = s.replace("    private SecureKeyStore keyStore;\n", "    private SecureKeyStore keyStore;\n" + fields, 1)
+          s = s.replace("        setContentView(webView);", """        rootLayout = new FrameLayout(this);
+                  rootLayout.addView(webView, new FrameLayout.LayoutParams(
+                      FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+                  splashOverlay = createAnimatedSplash();
+                  rootLayout.addView(splashOverlay, new FrameLayout.LayoutParams(
+                      FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+                  setContentView(rootLayout);
+                  splashHandler.postDelayed(() -> dismissSplash(), 2400);
+                  splashHandler.postDelayed(() -> dismissSplash(), 10000);""", 1)
+          methods = r'''
+              private View createAnimatedSplash() {
+                  FrameLayout splash = new FrameLayout(this);
+                  splash.setBackground(new GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                      new int[]{Color.rgb(8, 13, 31), Color.rgb(18, 27, 55), Color.rgb(7, 10, 24)}));
+                  View glow = new View(this);
+                  GradientDrawable glowBg = new GradientDrawable();
+                  glowBg.setShape(GradientDrawable.OVAL);
+                  glowBg.setColor(Color.argb(38, 55, 151, 255));
+                  glow.setBackground(glowBg);
+                  FrameLayout.LayoutParams gp = new FrameLayout.LayoutParams(dp(250), dp(250), Gravity.CENTER);
+                  splash.addView(glow, gp);
+                  ObjectAnimator glowPulse = ObjectAnimator.ofFloat(glow, View.ALPHA, 0.3f, 0.85f);
+                  glowPulse.setDuration(1400);
+                  glowPulse.setRepeatCount(ValueAnimator.INFINITE);
+                  glowPulse.setRepeatMode(ValueAnimator.REVERSE);
+                  glowPulse.start();
+                  LinearLayout content = new LinearLayout(this);
+                  content.setOrientation(LinearLayout.VERTICAL);
+                  content.setGravity(Gravity.CENTER);
+                  content.setPadding(dp(28), dp(24), dp(28), dp(24));
+                  FrameLayout.LayoutParams cp = new FrameLayout.LayoutParams(
+                      FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT, Gravity.CENTER);
+                  splash.addView(content, cp);
+                  TextView logo = new TextView(this);
+                  logo.setText("A");
+                  logo.setTextColor(Color.WHITE);
+                  logo.setTextSize(66);
+                  logo.setTypeface(Typeface.create("sans-serif-black", Typeface.BOLD));
+                  logo.setGravity(Gravity.CENTER);
+                  GradientDrawable logoBg = new GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                      new int[]{Color.rgb(42, 145, 255), Color.rgb(102, 75, 230)});
+                  logoBg.setShape(GradientDrawable.OVAL);
+                  logoBg.setStroke(dp(2), Color.argb(110, 255, 255, 255));
+                  logo.setBackground(logoBg);
+                  logo.setElevation(dp(12));
+                  LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(dp(126), dp(126));
+                  lp.gravity = Gravity.CENTER;
+                  content.addView(logo, lp);
+                  logo.setAlpha(0f);
+                  logo.setScaleX(0.55f);
+                  logo.setScaleY(0.55f);
+                  logo.animate().alpha(1f).scaleX(1f).scaleY(1f).rotation(0f)
+                      .setDuration(850).setInterpolator(new DecelerateInterpolator(2f)).start();
+                  TextView title = new TextView(this);
+                  title.setText("ANAS Studio");
+                  title.setTextColor(Color.WHITE);
+                  title.setTextSize(27);
+                  title.setTypeface(Typeface.create("sans-serif", Typeface.BOLD));
+                  title.setGravity(Gravity.CENTER);
+                  LinearLayout.LayoutParams tp = new LinearLayout.LayoutParams(
+                      LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                  tp.topMargin = dp(25);
+                  content.addView(title, tp);
+                  title.setAlpha(0f);
+                  title.setTranslationY(dp(18));
+                  title.animate().alpha(1f).translationY(0f).setStartDelay(380).setDuration(650).start();
+                  TextView subtitle = new TextView(this);
+                  subtitle.setText("استوديو الإبداع والإنتاج الذكي");
+                  subtitle.setTextColor(Color.rgb(177, 195, 225));
+                  subtitle.setTextSize(14);
+                  subtitle.setGravity(Gravity.CENTER);
+                  LinearLayout.LayoutParams sp = new LinearLayout.LayoutParams(
+                      LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                  sp.topMargin = dp(8);
+                  content.addView(subtitle, sp);
+                  subtitle.setAlpha(0f);
+                  subtitle.animate().alpha(1f).setStartDelay(650).setDuration(650).start();
+                  TextView loading = new TextView(this);
+                  loading.setText("•   •   •");
+                  loading.setTextColor(Color.rgb(105, 174, 255));
+                  loading.setTextSize(20);
+                  loading.setGravity(Gravity.CENTER);
+                  LinearLayout.LayoutParams bp = new LinearLayout.LayoutParams(
+                      LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                  bp.topMargin = dp(30);
+                  content.addView(loading, bp);
+                  ObjectAnimator dots = ObjectAnimator.ofFloat(loading, View.ALPHA, 0.3f, 1f);
+                  dots.setDuration(650);
+                  dots.setRepeatCount(ValueAnimator.INFINITE);
+                  dots.setRepeatMode(ValueAnimator.REVERSE);
+                  dots.start();
+                  return splash;
+              }
+
+              private int dp(float value) {
+                  return (int) (value * getResources().getDisplayMetrics().density + 0.5f);
+              }
+
+              private void dismissSplash() {
+                  if (splashOverlay == null || rootLayout == null) return;
+                  View overlay = splashOverlay;
+                  splashOverlay = null;
+                  overlay.animate().alpha(0f).setDuration(350)
+                      .withEndAction(() -> rootLayout.removeView(overlay)).start();
+              }
+
+          '''
+          if "createAnimatedSplash()" not in s:
+              anchor = "    @Override protected void onActivityResult"
+              if anchor not in s:
+                  raise SystemExit("Could not find activity-result insertion point")
+              s = s.replace(anchor, methods + anchor, 1)
+          p.write_text(s)
+          PY
                     HTML_FILE="$(find "$PROJECT_DIR" -path '*/assets/index.html' -type f -print -quit)"
           test -n "$HTML_FILE"
           HTML_FILE="$HTML_FILE" python3 - <<'PY'
