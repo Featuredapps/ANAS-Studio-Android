@@ -79,6 +79,38 @@ new2="""      refreshAllUI();
     function addNewSceneToEditor()"""
 if old2 in s: s=s.replace(old2,new2,1)
 if 'editorSceneCount' not in s: raise Exception('patch failed')
+
+# Do not announce a save when browser storage rejected the write.
+const saveBlock = `persistScripts();
+      if (shouldRefresh) refreshAllUI();`;
+const safeSaveBlock = `const saveSucceeded = persistScripts();
+      if (saveSucceeded === false) {
+        const failedStatus = document.getElementById('editorSaveStatus');
+        if (failedStatus) failedStatus.textContent = 'فشل الحفظ؛ صدّر نسخة احتياطية وأفرغ مساحة التخزين';
+        return;
+      }
+      if (shouldRefresh) refreshAllUI();`;
+if (s.includes(saveBlock)) s = s.replace(saveBlock, safeSaveBlock, 1);
+
+# Keep the current workspace intact if restoring a backup cannot be persisted.
+const importBlock = `        SCRIPTS = restored;
+        currentIdx = 0;
+        PROJECT_AUDIO_STORE.clear();
+        persistScripts();
+        navigateTo('projects');`;
+const safeImportBlock = `        const previousProjects = SCRIPTS;
+        SCRIPTS = restored;
+        currentIdx = 0;
+        if (persistScripts() === false) {
+          SCRIPTS = previousProjects;
+          currentIdx = 0;
+          showToast('تعذر حفظ النسخة المستعادة؛ بقيت مشاريعك الحالية كما هي.');
+          return;
+        }
+        PROJECT_AUDIO_STORE.clear();
+        navigateTo('projects');`;
+if (s.includes(importBlock)) s = s.replace(importBlock, safeImportBlock, 1);
+
 p.write_text(s)
 
 

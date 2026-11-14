@@ -48,7 +48,7 @@ audio_js = r'''
         await new Promise((resolve, reject) => {
           const tx = db.transaction('assets', 'readwrite');
           tx.objectStore('assets').delete(String(projectId));
-          tx.oncomplete = resolve; tx.onerror = () => reject(tx.error);
+          tx.oncomplete = resolve; tx.onerror = () => reject(tx.error); tx.onabort = () => reject(tx.error || new Error('Audio delete aborted'));
         });
       } catch (error) { console.warn('Could not delete project audio:', error); }
     }

@@ -16,6 +16,8 @@ required = [
     "function restoreProjectAudioAssets()",
     "function saveProjectAudioAsset(",
     "function scheduleStudioAutosave()",
+    "const saveSucceeded = persistScripts()",
+    "const previousProjects = SCRIPTS",
     "window.addEventListener('pagehide'",
     "PROJECT_AUDIO_STORE.set = function(projectId, audio)",
     "function startCompleteRender(",
