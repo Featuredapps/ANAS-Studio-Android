@@ -54,7 +54,13 @@ jobs:
           test -n "$PROJECT_DIR"
           mkdir -p "$PROJECT_DIR/app/src/main/res/drawable"
           cp "$GITHUB_WORKSPACE/branding/ic_launcher.xml" "$PROJECT_DIR/app/src/main/res/drawable/ic_launcher.xml"
-          sed -i '/android:label="ANAS Studio"/a\        android:icon="@drawable/ic_launcher"\n        android:roundIcon="@drawable/ic_launcher"' "$PROJECT_DIR/app/src/main/AndroidManifest.xml"
+          python3 - <<'PY'
+          from pathlib import Path
+          manifest = Path('app/src/main/AndroidManifest.xml')
+          content = manifest.read_text()
+          content = content.replace('android:label="ANAS Studio"', 'android:label="ANAS Studio"\\n        android:icon="@drawable/ic_launcher"\\n        android:roundIcon="@drawable/ic_launcher"')
+          manifest.write_text(content)
+          PY
           cd "$PROJECT_DIR"
           gradle --no-daemon assembleDebug
           install -D app/build/outputs/apk/debug/app-debug.apk "$GITHUB_WORKSPACE/app-debug.apk"
