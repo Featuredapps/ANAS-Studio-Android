@@ -268,3 +268,72 @@ nav.lg\\:hidden{
     filter:brightness(1.06);
   }
 }
+
+/* Navigation redesign: target the actual navigation controls, not assumed utility classes. */
+nav button,
+nav [role="button"]{
+  position:relative!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:5px!important;
+  min-width:0!important;
+  min-height:58px!important;
+  padding:8px 5px!important;
+  border:1px solid transparent!important;
+  border-radius:16px!important;
+  background:transparent!important;
+  color:#aebbd0!important;
+  font-size:11px!important;
+  font-weight:650!important;
+  line-height:1.25!important;
+  box-shadow:none!important;
+  transition:background .2s ease,border-color .2s ease,color .2s ease,transform .2s ease!important;
+}
+nav button svg,
+nav [role="button"] svg,
+nav button i,
+nav [role="button"] i{
+  display:block!important;
+  width:21px!important;
+  height:21px!important;
+  flex:0 0 21px!important;
+  opacity:.86;
+  transition:transform .2s ease,opacity .2s ease!important;
+}
+nav button.active,
+nav button[aria-current="page"],
+nav button[aria-selected="true"],
+nav button[data-active="true"],
+nav [role="button"].active,
+nav [role="button"][aria-current="page"],
+nav [role="button"][aria-selected="true"],
+nav [role="button"][data-active="true"]{
+  color:#ffe0a4!important;
+  background:linear-gradient(155deg,rgba(233,189,112,.2),rgba(233,189,112,.075))!important;
+  border-color:rgba(233,189,112,.25)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.055),0 7px 18px rgba(0,0,0,.16)!important;
+}
+nav button.active svg,
+nav button[aria-current="page"] svg,
+nav button[aria-selected="true"] svg,
+nav button[data-active="true"] svg,
+nav [role="button"].active svg,
+nav [role="button"][aria-current="page"] svg{
+  opacity:1;
+  transform:translateY(-1px) scale(1.08);
+  color:#f7d99e!important;
+}
+nav button:active,
+nav [role="button"]:active{
+  transform:scale(.94)!important;
+}
+@media(max-width:700px){
+  nav button,
+  nav [role="button"]{
+    flex:1 1 0!important;
+    min-height:60px!important;
+    font-size:10px!important;
+  }
+}
