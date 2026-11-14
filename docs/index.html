@@ -18,6 +18,7 @@
 .footer{border-top:1px solid #ffffff14;padding:30px 0;color:#758397;font-size:12px}.footer-inner{display:flex;justify-content:space-between;align-items:center;gap:20px}.footer a{color:#c6d0dd}
 @media(max-width:850px){.navlinks{display:none}.hero{grid-template-columns:1fr;text-align:center;padding:65px 0 45px;gap:25px}.hero-desc{margin-inline:auto}.hero-buttons{justify-content:center}.hero-art{height:465px}.features{grid-template-columns:repeat(2,1fr)}.showcase{grid-template-columns:1fr;gap:30px}.showcase-copy{text-align:center}.showcase-list{display:inline-block;text-align:start}.workspace{max-width:600px;width:100%;margin:auto}}
 @media(max-width:560px){.container{width:calc(100% - 30px)}.nav{height:68px}.brand-icon{width:38px;height:38px}.nav-download{display:none}.hero{padding-top:53px}.hero h1{font-size:43px;letter-spacing:-1px}.hero-desc{font-size:15px}.hero-art{height:410px;transform:scale(.92)}.device{transform:scale(.88) rotate(-5deg)}.float-a{right:-6px;top:28px}.float-b{left:-8px;bottom:20px}.float-c{left:-10px;top:180px}.statrow{padding:18px 0}.stat strong{font-size:12px}.stat span{font-size:10px}.section{padding:72px 0}.features,.workflow{grid-template-columns:1fr}.feature{min-height:0}.workspace-body{grid-template-columns:.8fr 1.2fr}.download-panel{padding:39px 18px}.download-panel .btn-primary{width:100%}.footer-inner{flex-direction:column;text-align:center}}
+.release-notes{max-width:720px;margin:24px auto 0;padding:18px 20px;text-align:start;border:1px solid #ffffff20;border-radius:16px;background:#080b124d}.release-notes h3{font-size:15px;margin:0 0 8px;color:#f2c46f}.release-notes p{white-space:pre-wrap;overflow-wrap:anywhere;color:#c3cedb;font-size:13px;margin:0 0 10px}.release-notes a{font-size:12px;color:var(--cyan);text-decoration:underline}
 </style>
 </head>
 <body>
@@ -63,15 +64,37 @@
 <details><summary data-ar="كيف أحصل على التحديثات؟" data-en="How do I get updates?">كيف أحصل على التحديثات؟</summary><p data-ar="استخدم رابط التنزيل نفسه في هذه الصفحة. عند نشر إصدار جديد سيشير الرابط إلى أحدث ملف APK." data-en="Use the same download link on this page. Once a new release is published, the link will point to the latest APK.">استخدم رابط التنزيل نفسه في هذه الصفحة. عند نشر إصدار جديد سيشير الرابط إلى أحدث ملف APK.</p></details>
 <details><summary data-ar="أين تُحفظ ملفات الفيديو؟" data-en="Where are exported videos saved?">أين تُحفظ ملفات الفيديو؟</summary><p data-ar="يعتمد مكان الحفظ على نجاح التصدير وإصدار التطبيق؛ راجع رسالة التطبيق بعد التصدير ومجلد Movies على هاتفك." data-en="The save location depends on a successful export and app version. Check the in-app export message and your phone's Movies folder.">يعتمد مكان الحفظ على نجاح التصدير وإصدار التطبيق؛ راجع رسالة التطبيق بعد التصدير ومجلد Movies على هاتفك.</p></details>
 </div></div></section>
-<section class="download-section" id="download"><div class="container"><div class="download-panel"><span class="overline" data-ar="ANAS STUDIO FOR ANDROID" data-en="ANAS STUDIO FOR ANDROID">ANAS STUDIO FOR ANDROID</span><h2 data-ar="فكرتك القادمة تبدأ هنا." data-en="Your next idea starts here.">فكرتك القادمة تبدأ هنا.</h2><p data-ar="حمّل التطبيق وابدأ ببناء مشروعك الإبداعي. رابط التنزيل ثابت، ويتجه إلى أحدث إصدار منشور." data-en="Download the app and start building your next creative project. This permanent link always points to the latest published release.">حمّل التطبيق وابدأ ببناء مشروعك الإبداعي. رابط التنزيل ثابت، ويتجه إلى أحدث إصدار منشور.</p><a class="btn-primary" href="https://github.com/Featuredapps/ANAS-Studio-Android/releases/latest/download/app-debug.apk">↓ <span data-ar="تنزيل ANAS Studio APK" data-en="Download ANAS Studio APK">تنزيل ANAS Studio APK</span></a><div class="download-meta"><span id="version">Latest release</span><span>Android</span><span data-ar="ملف APK مباشر" data-en="Direct APK">ملف APK مباشر</span></div></div></div></section>
+<section class="download-section" id="download"><div class="container"><div class="download-panel"><span class="overline" data-ar="ANAS STUDIO FOR ANDROID" data-en="ANAS STUDIO FOR ANDROID">ANAS STUDIO FOR ANDROID</span><h2 data-ar="فكرتك القادمة تبدأ هنا." data-en="Your next idea starts here.">فكرتك القادمة تبدأ هنا.</h2><p data-ar="حمّل التطبيق وابدأ ببناء مشروعك الإبداعي. رابط التنزيل ثابت، ويتجه إلى أحدث إصدار منشور." data-en="Download the app and start building your next creative project. This permanent link always points to the latest published release.">حمّل التطبيق وابدأ ببناء مشروعك الإبداعي. رابط التنزيل ثابت، ويتجه إلى أحدث إصدار منشور.</p><a class="btn-primary" href="https://github.com/Featuredapps/ANAS-Studio-Android/releases/latest/download/app-debug.apk">↓ <span data-ar="تنزيل ANAS Studio APK" data-en="Download ANAS Studio APK">تنزيل ANAS Studio APK</span></a><div class="download-meta" aria-live="polite"><span id="version" data-ar="الإصدار: جارٍ التحميل" data-en="Version: loading">الإصدار: جارٍ التحميل</span><span id="release-date" data-ar="تاريخ التحديث: —" data-en="Updated: —">تاريخ التحديث: —</span><span id="apk-size" data-ar="حجم APK: —" data-en="APK size: —">حجم APK: —</span><span data-ar="ملف APK مباشر" data-en="Direct APK">ملف APK مباشر</span></div><div class="release-notes" id="release-notes" hidden><h3 data-ar="ما الجديد في هذا الإصدار؟" data-en="What's new in this release">ما الجديد في هذا الإصدار؟</h3><p id="release-body"></p><a id="release-link" href="https://github.com/Featuredapps/ANAS-Studio-Android/releases/latest" target="_blank" rel="noopener" data-ar="عرض صفحة الإصدار على GitHub ↗" data-en="View release on GitHub ↗">عرض صفحة الإصدار على GitHub ↗</a></div></div></div></section>
 </main>
 <footer class="footer"><div class="container footer-inner"><a class="brand" href="#"><span class="brand-icon">🎬</span><span>ANAS STUDIO</span></a><span>© <span id="year"></span> ANAS Studio. <span data-ar="جميع الحقوق محفوظة." data-en="All rights reserved.">جميع الحقوق محفوظة.</span></span><a href="https://github.com/Featuredapps/ANAS-Studio-Android">GitHub ↗</a></div></footer>
 <script>
 const btn=document.getElementById('langBtn');
-function setLang(lang){document.documentElement.lang=lang;document.documentElement.dir=lang==='ar'?'rtl':'ltr';document.querySelectorAll('[data-ar][data-en]').forEach(el=>{el.innerHTML=el.dataset[lang]});btn.textContent=lang==='ar'?'English':'العربية';try{localStorage.setItem('anas-lang',lang)}catch(e){}}
+let latestRelease=null;
+function renderReleaseInfo(){
+  const ar=document.documentElement.lang==='ar',d=latestRelease;
+  if(!d){document.getElementById('version').textContent=ar?'الإصدار: تعذر تحميل البيانات':'Version: unavailable';return}
+  const asset=(d.assets||[]).find(a=>a.name==='app-debug.apk')||(d.assets||[])[0];
+  document.getElementById('version').textContent=(ar?'الإصدار: ':'Version: ')+(d.tag_name||d.name||'latest');
+  const date=d.published_at?new Date(d.published_at).toLocaleDateString(ar?'ar':'en',{year:'numeric',month:'long',day:'numeric'}):'—';
+  document.getElementById('release-date').textContent=(ar?'تاريخ التحديث: ':'Updated: ')+date;
+  const size=asset&&Number.isFinite(asset.size)?(asset.size/1048576).toFixed(2)+' MB':'—';
+  document.getElementById('apk-size').textContent=(ar?'حجم APK: ':'APK size: ')+size;
+  const notes=document.getElementById('release-notes'),body=(d.body||'').trim();
+  if(body){document.getElementById('release-body').textContent=body;notes.hidden=false}else{notes.hidden=true}
+  document.getElementById('release-link').href=d.html_url||'https://github.com/Featuredapps/ANAS-Studio-Android/releases/latest';
+}
+function setLang(lang){
+  document.documentElement.lang=lang;document.documentElement.dir=lang==='ar'?'rtl':'ltr';
+  document.querySelectorAll('[data-ar][data-en]').forEach(el=>{el.innerHTML=el.dataset[lang]});
+  btn.textContent=lang==='ar'?'English':'العربية';renderReleaseInfo();
+  try{localStorage.setItem('anas-lang',lang)}catch(e){}
+}
 btn.addEventListener('click',()=>setLang(document.documentElement.lang==='ar'?'en':'ar'));
 let saved='ar';try{saved=localStorage.getItem('anas-lang')||'ar'}catch(e){}setLang(saved);
 document.getElementById('year').textContent=new Date().getFullYear();
-fetch('https://api.github.com/repos/Featuredapps/ANAS-Studio-Android/releases/latest').then(r=>r.ok?r.json():Promise.reject()).then(d=>{const label=document.documentElement.lang==='ar'?'آخر إصدار: ':'Latest release: ';document.getElementById('version').textContent=label+(d.tag_name||d.name||'Latest')}).catch(()=>{document.getElementById('version').textContent=document.documentElement.lang==='ar'?'أحدث إصدار متاح':'Latest release available'});
+fetch('https://api.github.com/repos/Featuredapps/ANAS-Studio-Android/releases/latest')
+  .then(r=>{if(!r.ok)throw new Error('GitHub API '+r.status);return r.json()})
+  .then(d=>{latestRelease=d;renderReleaseInfo()})
+  .catch(()=>{document.getElementById('version').textContent=document.documentElement.lang==='ar'?'تعذر جلب معلومات الإصدار':'Could not load release information'});
 </script>
 </body></html>
