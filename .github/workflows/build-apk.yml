@@ -70,7 +70,7 @@ jobs:
               raise SystemExit("Malformed application element")
           tag = content[start:end]
           if "android:icon=" not in tag:
-              content = content[:end] + '\\n        android:icon="@drawable/ic_launcher"\\n        android:roundIcon="@drawable/ic_launcher"' + content[end:]
+              content = content[:end] + '\n        android:icon="@drawable/ic_launcher"\n        android:roundIcon="@drawable/ic_launcher"' + content[end:]
           manifest.write_text(content)
           PY
           HTML_FILE="$(find "$PROJECT_DIR" -path '*/assets/index.html' -type f -print -quit)"
@@ -83,7 +83,7 @@ jobs:
           content = html.read_text()
           if "</head>" not in content:
               raise SystemExit("HTML head closing tag not found")
-          content = content.replace("</head>", '  <link rel="stylesheet" href="mobile.css">\\n</head>', 1)
+          content = content.replace("</head>", '  <link rel="stylesheet" href="mobile.css">\n</head>', 1)
           html.write_text(content)
           PY
           cd "$PROJECT_DIR"
