@@ -82,6 +82,24 @@ if 'editorSceneCount' not in s: raise Exception('patch failed')
 p.write_text(s)
 
 
+# Surface storage failures instead of reporting a false successful save.
+old_persist = """    function persistScripts() {
+      try {
+        localStorage.setItem(STORAGE_KEY_SCRIPTS, JSON.stringify(SCRIPTS));
+      } catch (e) {}
+    }"""
+new_persist = """    function persistScripts() {
+      try {
+        localStorage.setItem(STORAGE_KEY_SCRIPTS, JSON.stringify(SCRIPTS));
+        return true;
+      } catch (e) {
+        showToast('مساحة التخزين ممتلئة؛ صدّر نسخة احتياطية واحذف بيانات غير ضرورية.');
+        return false;
+      }
+    }"""
+if old_persist in s:
+    s=s.replace(old_persist, new_persist, 1)
+
 # Project backup / restore and quiet autosave.
 projects_anchor = '''      <div id="projectsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">'''
 projects_block = '''      <div class="flex flex-wrap items-center gap-2 rounded-2xl border border-zinc-800 bg-black/30 p-3">
