@@ -205,6 +205,13 @@ backup_js = r'''
     document.addEventListener('change', event => {
       if (event.target.matches('#editorProjectTheme')) scheduleStudioAutosave();
     });
+    // Flush pending edits synchronously when Android WebView backgrounds or closes the page.
+    window.addEventListener('pagehide', () => {
+      if (!studioAutosaveTimer) return;
+      clearTimeout(studioAutosaveTimer);
+      studioAutosaveTimer = null;
+      try { saveScriptEditorChanges(false); } catch (error) {}
+    });
 '''
 old_listener = '''    document.addEventListener('input', event => {
       if (event.target.matches('[data-scene-text]')) updateScriptEditorMetrics();
