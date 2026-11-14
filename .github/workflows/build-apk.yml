@@ -171,6 +171,23 @@ jobs:
           PY
           MAIN_ACTIVITY="$(find "$PROJECT_DIR" -path '*/src/main/java/com/anasgdxj/studio/MainActivity.java' -type f -print -quit)"
           grep -q 'MediaStore.MediaColumns.IS_PENDING' "$MAIN_ACTIVITY"
+          MAIN_ACTIVITY="$MAIN_ACTIVITY" python3 - <<'PY'
+          import os
+          from pathlib import Path
+          p = Path(os.environ["MAIN_ACTIVITY"])
+          s = p.read_text()
+          old = 'intent.setType("audio/*");'
+          new = '''String[] acceptedTypes = params.getAcceptTypes();
+                          if (acceptedTypes != null && acceptedTypes.length > 0 && acceptedTypes[0] != null && !acceptedTypes[0].trim().isEmpty()) {
+                              intent.setType("*/*");
+                              intent.putExtra(Intent.EXTRA_MIME_TYPES, acceptedTypes);
+                          } else {
+                              intent.setType("audio/*");
+                          }'''
+          if old not in s:
+              raise SystemExit("Could not find audio chooser MIME filter")
+          p.write_text(s.replace(old, new, 1))
+          PY
           MAIN_ACTIVITY="$(find "$PROJECT_DIR" -path '*/src/main/java/com/anasgdxj/studio/MainActivity.java' -type f -print -quit)"
           MAIN_ACTIVITY="$MAIN_ACTIVITY" python3 - <<'PY'
           import os
