@@ -178,10 +178,13 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest
-          name: ANAS Studio - Latest APK
+          name: ANAS Studio - Build #${{ github.run_number }}
           body: |
-            أحدث نسخة مستقرة من تطبيق ANAS Studio.
-            يتم تحديث هذا الإصدار تلقائياً مع كل بناء ناجح على الفرع main.
+            إصدار بناء تلقائي لتطبيق ANAS Studio.
+            رقم البناء: ${{ github.run_number }}
+            Commit: ${{ github.sha }}
+            Changes: ${{ github.event.head_commit.message || 'Manual build' }}
+            يتم تحديث رابط APK الثابت بعد نجاح البناء.
           files: app-debug.apk
           overwrite_files: true
           make_latest: true
