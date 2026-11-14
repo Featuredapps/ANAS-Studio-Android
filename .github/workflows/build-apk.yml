@@ -315,6 +315,7 @@ jobs:
           PY
                     HTML_FILE="$(find "$PROJECT_DIR" -path '*/assets/index.html' -type f -print -quit)"
           test -n "$HTML_FILE"
+          python3 "$GITHUB_WORKSPACE/mobile-ui/enhance-script-editor.py" "$HTML_FILE"
           HTML_FILE="$HTML_FILE" python3 - <<'PY'
           import os
           from pathlib import Path
