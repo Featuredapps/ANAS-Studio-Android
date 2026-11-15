@@ -1,0 +1,39 @@
+name: Deploy ANAS Studio Cloudflare Worker
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'cloudflare-updates/**'
+      - '.github/workflows/deploy-cloudflare-worker.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate Cloudflare deployment settings
+        env:
+          CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CF_KV_NAMESPACE_ID: ${{ vars.CLOUDFLARE_KV_NAMESPACE_ID }}
+        run: |
+          set -euo pipefail
+          test -n "$CF_API_TOKEN" || { echo "::error::Add CLOUDFLARE_API_TOKEN as an Actions secret."; exit 1; }
+          test -n "$CF_ACCOUNT_ID" || { echo "::error::Add CLOUDFLARE_ACCOUNT_ID as an Actions variable."; exit 1; }
+          test -n "$CF_KV_NAMESPACE_ID" || { echo "::error::Add CLOUDFLARE_KV_NAMESPACE_ID as an Actions variable."; exit 1; }
+          sed -i "s/REPLACE_WITH_CLOUDFLARE_KV_NAMESPACE_ID/$CF_KV_NAMESPACE_ID/" cloudflare-updates/wrangler.toml
+
+      - name: Deploy Worker
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: cloudflare-updates
+          command: deploy
