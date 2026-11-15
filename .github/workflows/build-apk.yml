@@ -345,6 +345,9 @@ jobs:
 
           imports = [
               "import java.net.HttpURLConnection;",
+              "import android.app.AlertDialog;",
+              "import android.content.Intent;",
+              "import android.net.Uri;",
               "import java.net.URL;",
               "import java.security.MessageDigest;",
               "import java.nio.charset.StandardCharsets;",
@@ -407,7 +410,7 @@ jobs:
           load_anchor = '        webView.loadUrl("https://appassets.androidplatform.net/assets/index.html");'
           if load_anchor not in s:
               raise SystemExit("MainActivity.java: initial bundled WebView load was not found")
-          s = s.replace(load_anchor, load_anchor + "\n        startRemoteUpdateCheck();", 1)
+          s = s.replace(load_anchor, load_anchor + "\n        startRemoteUpdateCheck();\n        checkForApkUpdate();", 1)
 
           methods = r'''
               private static final String UPDATE_BASE_URL = "https://anas-studio-updates-api.anasgdxj.workers.dev";
@@ -537,6 +540,72 @@ jobs:
           if destroy_anchor not in s:
               raise SystemExit("MainActivity.java: onDestroy method not found")
           s = s.replace(destroy_anchor, destroy_anchor + "\n        activityDestroyed = true;", 1)
+
+          if "private void checkForApkUpdate()" not in s:
+              update_notice = r'''
+              private void checkForApkUpdate() {
+                  Thread thread = new Thread(() -> {
+                      HttpURLConnection connection = null;
+                      try {
+                          URL url = new URL("https://api.github.com/repos/Featuredapps/ANAS-Studio-Android/releases/latest");
+                          connection = (HttpURLConnection) url.openConnection();
+                          connection.setRequestMethod("GET");
+                          connection.setConnectTimeout(8000);
+                          connection.setReadTimeout(10000);
+                          connection.setUseCaches(false);
+                          connection.setRequestProperty("Accept", "application/vnd.github+json");
+                          connection.setRequestProperty("User-Agent", "ANAS-Studio-Android");
+                          if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) return;
+                          byte[] data = readBounded(connection.getInputStream(), 262144);
+                          org.json.JSONObject release = new org.json.JSONObject(new String(data, StandardCharsets.UTF_8));
+                          String body = release.optString("body", "");
+                          java.util.regex.Matcher matcher = java.util.regex.Pattern
+                              .compile("(?i)(?:رقم البناء|build(?:\\s+number)?|version\\s*code)\\s*[:#]?\\s*(\\d+)")
+                              .matcher(body);
+                          if (!matcher.find()) return;
+                          long latestBuild = Long.parseLong(matcher.group(1));
+                          long installedBuild;
+                          try {
+                              android.content.pm.PackageInfo info = getPackageManager().getPackageInfo(getPackageName(), 0);
+                              installedBuild = info.versionCode;
+                          } catch (Exception ignored) { return; }
+                          if (latestBuild <= installedBuild || activityDestroyed) return;
+                          final long availableBuild = latestBuild;
+                          runOnUiThread(() -> {
+                              if (activityDestroyed || isFinishing()) return;
+                              new AlertDialog.Builder(MainActivity.this)
+                                  .setTitle("يتوفر تحديث جديد لـ ANAS Studio")
+                                  .setMessage("تتوفر نسخة أحدث (البناء " + availableBuild + ").\\n\\nانتقل إلى صفحة التطبيق لتنزيل ملف APK وتثبيته.")
+                                  .setPositiveButton("تنزيل التحديث", (dialog, which) -> {
+                                      try {
+                                          startActivity(new Intent(Intent.ACTION_VIEW,
+                                              Uri.parse("https://featuredapps.github.io/ANAS-Studio-Android/#download")));
+                                      } catch (Exception e) {
+                                          try {
+                                              startActivity(new Intent(Intent.ACTION_VIEW,
+                                                  Uri.parse("https://github.com/Featuredapps/ANAS-Studio-Android/releases/latest")));
+                                          } catch (Exception ignored) {}
+                                      }
+                                  })
+                                  .setNegativeButton("لاحقاً", (dialog, which) -> dialog.dismiss())
+                                  .setCancelable(true)
+                                  .show();
+                          });
+                      } catch (Exception e) {
+                          Log.w("ANASStudioUpdates", "APK release check unavailable", e);
+                      } finally {
+                          if (connection != null) connection.disconnect();
+                      }
+                  }, "ANASStudio-APK-Update-Check");
+                  thread.setDaemon(true);
+                  thread.start();
+              }
+
+              '''
+              anchor_notice = "    private void startRemoteUpdateCheck() {"
+              if anchor_notice not in s:
+                  raise SystemExit("MainActivity.java: APK update notice insertion point not found")
+              s = s.replace(anchor_notice, update_notice + anchor_notice, 1)
 
           p.write_text(s)
           print("Installed Cloudflare update client with SHA-256 validation, atomic cache replacement and bundled offline fallback.")
