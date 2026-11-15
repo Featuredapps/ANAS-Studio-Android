@@ -604,8 +604,8 @@ jobs:
           BYTES="$(wc -c < "$HTML_TO_PUBLISH" | tr -d ' ')"
           SHA256="$(sha256sum "$HTML_TO_PUBLISH" | cut -d ' ' -f1)"
           printf '{"version":%s,"key":"build:%s","sha256":"%s","bytes":%s,"published":true,"notes":"Automatic publish from commit %s","publishedAt":"%s"}' "$VERSION" "$VERSION" "$SHA256" "$BYTES" "$GITHUB_SHA" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "$RUNNER_TEMP/anas-studio-manifest.json"
-          npx --yes wrangler@3.90.0 kv key put "build:$VERSION" --path "$HTML_TO_PUBLISH" --namespace-id "$CF_KV_NAMESPACE_ID" --remote
-          npx --yes wrangler@3.90.0 kv key put "published" --path "$RUNNER_TEMP/anas-studio-manifest.json" --namespace-id "$CF_KV_NAMESPACE_ID" --remote
+          npx --yes wrangler@4.162.0 kv key put "build:$VERSION" --path "$HTML_TO_PUBLISH" --namespace-id "$CF_KV_NAMESPACE_ID" --remote
+          npx --yes wrangler@4.162.0 kv key put "published" --path "$RUNNER_TEMP/anas-studio-manifest.json" --namespace-id "$CF_KV_NAMESPACE_ID" --remote
           echo "Published processed Android HTML build $VERSION ($BYTES bytes, SHA-256 $SHA256)."
 
 
