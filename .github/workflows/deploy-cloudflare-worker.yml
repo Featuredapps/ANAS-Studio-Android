@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'cloudflare-updates/**'
+      - 'ANAS-Studio-Android-Project.zip'
       - '.github/workflows/deploy-cloudflare-worker.yml'
   workflow_dispatch:
 
@@ -37,3 +38,22 @@ jobs:
           accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: cloudflare-updates
           command: deploy
+
+      - name: Publish bundled Android HTML as the initial remote build
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CF_KV_NAMESPACE_ID: ${{ vars.CLOUDFLARE_KV_NAMESPACE_ID }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/anas-studio
+          unzip -p ANAS-Studio-Android-Project.zip ANAS-Studio-Android/app/src/main/assets/index.html > /tmp/anas-studio/index.html
+          test -s /tmp/anas-studio/index.html
+          grep -qi '<html' /tmp/anas-studio/index.html
+          VERSION="$(date +%s%3N)"
+          BYTES="$(wc -c < /tmp/anas-studio/index.html | tr -d ' ')"
+          SHA256="$(sha256sum /tmp/anas-studio/index.html | cut -d ' ' -f1)"
+          printf '{"version":%s,"key":"build:%s","sha256":"%s","bytes":%s,"published":true,"notes":"Initial bundled Android interface published by GitHub Actions","publishedAt":"%s"}' "$VERSION" "$VERSION" "$SHA256" "$BYTES" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > /tmp/anas-studio/manifest.json
+          npx --yes wrangler kv key put "build:$VERSION" --path /tmp/anas-studio/index.html --namespace-id "$CF_KV_NAMESPACE_ID" --account-id "$CLOUDFLARE_ACCOUNT_ID"
+          npx --yes wrangler kv key put "published" --path /tmp/anas-studio/manifest.json --namespace-id "$CF_KV_NAMESPACE_ID" --account-id "$CLOUDFLARE_ACCOUNT_ID"
+          echo "Published initial remote HTML build $VERSION ($BYTES bytes, SHA-256 $SHA256)."
