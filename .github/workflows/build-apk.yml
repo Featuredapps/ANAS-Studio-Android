@@ -433,9 +433,15 @@ jobs:
 
                       File cachedHtml = new File(getFilesDir(), "remote-index.html");
                       File cachedVersion = new File(getFilesDir(), "remote-version.txt");
-                      if (cachedHtml.isFile() && cachedHtml.length() == expectedBytes && cachedVersion.isFile()) {
+                      File cachedHash = new File(getFilesDir(), "remote-sha256.txt");
+                      if (cachedHtml.isFile() && cachedHtml.length() == expectedBytes &&
+                          cachedVersion.isFile() && cachedHash.isFile()) {
                           String currentVersion = new String(Files.readAllBytes(cachedVersion.toPath()), StandardCharsets.UTF_8).trim();
-                          if (Long.toString(version).equals(currentVersion)) return false;
+                          String currentHash = new String(Files.readAllBytes(cachedHash.toPath()), StandardCharsets.UTF_8).trim();
+                          String actualCachedHash = toHex(MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(cachedHtml.toPath())));
+                          if (Long.toString(version).equals(currentVersion) &&
+                              expectedHash.equalsIgnoreCase(currentHash) &&
+                              expectedHash.equalsIgnoreCase(actualCachedHash)) return false;
                       }
 
                       htmlConnection = (HttpURLConnection) new URL(UPDATE_BASE_URL + "/app").openConnection();
@@ -478,16 +484,22 @@ jobs:
 
                       File htmlTemp = new File(getFilesDir(), "remote-index.tmp");
                       File versionTemp = new File(getFilesDir(), "remote-version.tmp");
+                      File hashTemp = new File(getFilesDir(), "remote-sha256.tmp");
                       try (FileOutputStream out = new FileOutputStream(htmlTemp)) {
                           out.write(html);
                           out.getFD().sync();
                       }
-                      replaceAtomically(htmlTemp, cachedHtml);
                       try (FileOutputStream out = new FileOutputStream(versionTemp)) {
                           out.write(Long.toString(version).getBytes(StandardCharsets.UTF_8));
                           out.getFD().sync();
                       }
+                      try (FileOutputStream out = new FileOutputStream(hashTemp)) {
+                          out.write(expectedHash.toLowerCase(Locale.ROOT).getBytes(StandardCharsets.UTF_8));
+                          out.getFD().sync();
+                      }
+                      replaceAtomically(htmlTemp, cachedHtml);
                       replaceAtomically(versionTemp, cachedVersion);
+                      replaceAtomically(hashTemp, cachedHash);
                       Log.i("ANASStudioUpdates", "Installed verified web update " + version);
                       return true;
                   } catch (Exception e) {
