@@ -89,6 +89,105 @@ export default {
     const list=await env.STUDIO_KV.list({prefix:"build:",limit:100});
     return json({versions:list.keys.map(k=>Number(k.name.slice(6))).sort((a,b)=>b-a)});
   }
+
+  // Lightweight community API backed by the existing KV namespace.
+  // User-generated content is plain text only; the client escapes it before rendering.
+  const communityPath = p.startsWith("/api/community/") || p === "/api/notifications";
+  if (communityPath) {
+    if (!env.STUDIO_KV) return json({error:"Community storage is not configured"},503);
+    const kv = env.STUDIO_KV;
+    const readJson = async (key, fallback) => (await kv.get(key,"json")) || fallback;
+    const validDevice = value => typeof value === "string" && /^[a-zA-Z0-9_-]{12,80}$/.test(value);
+    const limited = async (device, action, seconds) => {
+      const key = "community:rate:" + action + ":" + device;
+      if (await kv.get(key)) return false;
+      await kv.put(key,"1",{expirationTtl:seconds});
+      return true;
+    };
+    const body = async () => await req.json().catch(() => ({}));
+    const cleanText = (value, max) => typeof value === "string"
+      ? value.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g,"").trim().slice(0,max) : "";
+    if (p === "/api/notifications" && req.method === "GET") {
+      const events = [];
+      const manifest = await readJson("published",null);
+      if (manifest && manifest.published && manifest.version) {
+        events.push({
+          id:"release:" + manifest.version,
+          type:"release",
+          title:"تحديث جديد لـ ANAS Studio",
+          message:"الإصدار " + manifest.version + " أصبح متاحاً. افتح صفحة التنزيل للحصول على أحدث نسخة.",
+          createdAt:manifest.publishedAt || new Date().toISOString()
+        });
+      }
+      const listed = await kv.list({prefix:"community:post:",limit:30});
+      const posts = await Promise.all(listed.keys.map(k=>readJson(k.name,null)));
+      for (const post of posts.filter(Boolean)) {
+        events.push({
+          id:"post:" + post.id,
+          type:"community",
+          title:"مشاركة جديدة في المجتمع",
+          message:post.text.slice(0,110),
+          createdAt:post.createdAt
+        });
+      }
+      events.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+      return json({events:events.slice(0,25)});
+    }
+    if (p === "/api/community/feed" && req.method === "GET") {
+      const device = u.searchParams.get("deviceId") || "";
+      const listed = await kv.list({prefix:"community:post:",limit:50});
+      const posts = (await Promise.all(listed.keys.map(async k=>{
+        const post=await readJson(k.name,null);
+        if(!post)return null;
+        const reactions=await readJson("community:reactions:"+post.id,{});
+        const comments=await readJson("community:comments:"+post.id,[]);
+        return {...post,likes:Object.values(reactions).filter(x=>x==="like").length,
+          dislikes:Object.values(reactions).filter(x=>x==="dislike").length,
+          myReaction:validDevice(device)?(reactions[device]||null):null,commentCount:comments.length,
+          comments:comments.slice(-3)};
+      }))).filter(Boolean);
+      posts.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+      return json({posts:posts.slice(0,50)});
+    }
+    if (p === "/api/community/posts" && req.method === "POST") {
+      const data=await body(), device=String(data.deviceId||""), text=cleanText(data.text,1200);
+      if(!validDevice(device))return json({error:"معرّف الجهاز غير صالح. أعد فتح التطبيق."},400);
+      if(text.length<3)return json({error:"اكتب مشاركة لا تقل عن 3 أحرف."},400);
+      if(!await limited(device,"post",30))return json({error:"انتظر قليلاً قبل نشر مشاركة أخرى."},429);
+      const post={id:crypto.randomUUID(),text,createdAt:new Date().toISOString()};
+      await kv.put("community:post:"+post.id,JSON.stringify(post));
+      return json({ok:true,post},201);
+    }
+    if (p === "/api/community/comments" && req.method === "GET") {
+      const postId=u.searchParams.get("postId")||"";
+      if(!/^[0-9a-f-]{36}$/i.test(postId))return json({error:"المشاركة غير صالحة."},400);
+      return json({comments:await readJson("community:comments:"+postId,[])});
+    }
+    if (p === "/api/community/comments" && req.method === "POST") {
+      const data=await body(),device=String(data.deviceId||""),postId=String(data.postId||""),text=cleanText(data.text,500);
+      if(!validDevice(device)||!/^[0-9a-f-]{36}$/i.test(postId))return json({error:"بيانات التعليق غير صالحة."},400);
+      if(text.length<2)return json({error:"اكتب تعليقاً لا يقل عن حرفين."},400);
+      if(!await kv.get("community:post:"+postId))return json({error:"المشاركة غير موجودة."},404);
+      if(!await limited(device,"comment",12))return json({error:"انتظر قليلاً قبل إرسال تعليق آخر."},429);
+      const key="community:comments:"+postId, comments=await readJson(key,[]);
+      const comment={id:crypto.randomUUID(),text,createdAt:new Date().toISOString()};
+      comments.push(comment);
+      await kv.put(key,JSON.stringify(comments.slice(-100)));
+      return json({ok:true,comment},201);
+    }
+    if (p === "/api/community/reaction" && req.method === "POST") {
+      const data=await body(),device=String(data.deviceId||""),postId=String(data.postId||""),reaction=String(data.reaction||"");
+      if(!validDevice(device)||!/^[0-9a-f-]{36}$/i.test(postId)||!["like","dislike"].includes(reaction))
+        return json({error:"بيانات التقييم غير صالحة."},400);
+      if(!await kv.get("community:post:"+postId))return json({error:"المشاركة غير موجودة."},404);
+      const key="community:reactions:"+postId,reactions=await readJson(key,{});
+      if(reactions[device]===reaction)delete reactions[device];else reactions[device]=reaction;
+      await kv.put(key,JSON.stringify(reactions));
+      return json({ok:true,likes:Object.values(reactions).filter(x=>x==="like").length,
+        dislikes:Object.values(reactions).filter(x=>x==="dislike").length,myReaction:reactions[device]||null});
+    }
+  }
+
   return json({error:"Not found"},404);
  }
 };
