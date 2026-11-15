@@ -620,6 +620,7 @@ jobs:
           test -n "$HTML_FILE"
           python3 "$GITHUB_WORKSPACE/mobile-ui/enhance-script-editor.py" "$HTML_FILE"
           python3 "$GITHUB_WORKSPACE/mobile-ui/enhance-audio-persistence.py" "$HTML_FILE"
+          python3 "$GITHUB_WORKSPACE/mobile-ui/inject-community.py" "$HTML_FILE" "$GITHUB_WORKSPACE/mobile-ui/community.js"
           node --version
           python3 "$GITHUB_WORKSPACE/mobile-ui/validate-web.py" "$HTML_FILE"
           HTML_FILE="$HTML_FILE" python3 - <<'PY'
