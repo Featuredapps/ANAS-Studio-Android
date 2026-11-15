@@ -593,3 +593,17 @@ main{padding-bottom:calc(108px + env(safe-area-inset-bottom,0px))!important}
      [id*=signin i],[class*=signin i],[id*=signup i],[class*=signup i],
      [id*=register i],[class*=register i]){animation:authPanelEnter .38s cubic-bezier(.2,.7,.25,1) both}
 }
+
+
+/* Final Android polish: navigation dock and authentication layout. */
+nav[class~="lg:hidden"]{isolation:isolate;}
+@media(max-width:700px){
+ nav[class~="lg:hidden"]{grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:4px!important;background:linear-gradient(180deg,#142239 0%,#0c1524 100%)!important;border-top:1px solid rgba(190,210,238,.2)!important;box-shadow:0 -12px 34px rgba(0,0,0,.42),inset 0 1px 0 rgba(255,255,255,.045)!important;}
+ nav[class~="lg:hidden"]>button,nav[class~="lg:hidden"]>.nav-btn-mobile,nav[class~="lg:hidden"]>[role="button"]{min-height:62px!important;height:62px!important;border-radius:15px!important;font-size:10px!important;font-weight:650!important;letter-spacing:.05px!important;}
+ nav[class~="lg:hidden"]>button.active,nav[class~="lg:hidden"]>.nav-btn-mobile.active,nav[class~="lg:hidden"]>[role="button"].active,nav[class~="lg:hidden"]>button[aria-current="page"],nav[class~="lg:hidden"]>.nav-btn-mobile[aria-current="page"]{background:linear-gradient(180deg,rgba(233,189,112,.18),rgba(233,189,112,.075))!important;border-color:rgba(233,189,112,.28)!important;color:#ffdfa3!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 5px 16px rgba(0,0,0,.16)!important;}
+ nav[class~="lg:hidden"]>button.active svg,nav[class~="lg:hidden"]>.nav-btn-mobile.active svg{filter:drop-shadow(0 2px 5px rgba(233,189,112,.25));}
+}
+:is([id*=login i],[class*=login i],[id*=auth i],[class*=auth i],[id*=signin i],[class*=signin i],[id*=signup i],[class*=signup i],[id*=register i],[class*=register i]){width:min(100%,480px)!important;margin-inline:auto!important;}
+:is([id*=login i],[class*=login i],[id*=auth i],[class*=auth i],[id*=signin i],[class*=signin i],[id*=signup i],[class*=signup i],[id*=register i],[class*=register i]) :is(input,select,textarea){font-size:16px!important;}
+:is([id*=login i],[class*=login i],[id*=auth i],[class*=auth i],[id*=signin i],[class*=signin i],[id*=signup i],[class*=signup i],[id*=register i],[class*=register i]) :is(button,input[type=submit],[role=button]){width:100%;}
+@media(max-width:420px){main{padding-inline:13px!important;} :is([id*=login i],[class*=login i],[id*=auth i],[class*=auth i],[id*=signin i],[class*=signin i],[id*=signup i],[class*=signup i],[id*=register i],[class*=register i]){border-radius:22px!important;}}
