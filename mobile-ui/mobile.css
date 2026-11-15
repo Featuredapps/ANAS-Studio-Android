@@ -214,3 +214,32 @@
      font-size:10px!important;
    }
  }
+
+/* Mobile navigation layout repair: keep the bar inside the viewport. */
+@media(max-width:700px){
+ nav.lg\:hidden{
+  position:fixed!important;left:12px!important;right:12px!important;
+  bottom:calc(10px + var(--safe-bottom))!important;
+  width:auto!important;max-width:none!important;min-width:0!important;
+  transform:none!important;display:grid!important;
+  grid-auto-flow:column!important;grid-auto-columns:minmax(0,1fr)!important;
+  align-items:stretch!important;justify-content:stretch!important;
+  gap:4px!important;box-sizing:border-box!important;padding:7px!important;
+  border-radius:20px!important;overflow:hidden!important;
+ }
+ nav.lg\:hidden>*{min-width:0!important;width:100%!important;max-width:100%!important}
+ nav.lg\:hidden button,nav.lg\:hidden [role="button"]{
+  display:flex!important;flex:initial!important;width:100%!important;
+  min-width:0!important;min-height:54px!important;padding:6px 2px!important;
+  gap:3px!important;white-space:normal!important;overflow:hidden!important;
+  font-size:10px!important;border-radius:13px!important;
+ }
+ nav.lg\:hidden button svg,nav.lg\:hidden [role="button"] svg{
+  width:20px!important;height:20px!important;flex:0 0 20px!important
+ }
+ main{padding-bottom:calc(104px + var(--safe-bottom))!important}
+}
+@media(max-width:360px){
+ nav.lg\:hidden{left:8px!important;right:8px!important;gap:2px!important;padding:5px!important}
+ nav.lg\:hidden button,nav.lg\:hidden [role="button"]{font-size:9px!important}
+}
