@@ -243,3 +243,125 @@
  nav.lg\:hidden{left:8px!important;right:8px!important;gap:2px!important;padding:5px!important}
  nav.lg\:hidden button,nav.lg\:hidden [role="button"]{font-size:9px!important}
 }
+
+/* Bottom navigation v2 — compact, opaque, thumb-friendly Android dock. */
+@media(max-width:700px){
+  nav.lg\\:hidden{
+    position:fixed!important;
+    inset-inline:10px!important;
+    left:10px!important;
+    right:10px!important;
+    bottom:calc(8px + var(--safe-bottom))!important;
+    width:auto!important;
+    max-width:none!important;
+    min-width:0!important;
+    height:auto!important;
+    min-height:74px!important;
+    display:flex!important;
+    flex-direction:row!important;
+    align-items:stretch!important;
+    justify-content:space-between!important;
+    gap:5px!important;
+    padding:8px!important;
+    overflow:visible!important;
+    border:1px solid rgba(168,190,222,.2)!important;
+    border-radius:23px!important;
+    background:linear-gradient(155deg,rgba(22,35,55,.98),rgba(10,17,29,.98))!important;
+    box-shadow:0 14px 38px rgba(0,0,0,.48),inset 0 1px 0 rgba(255,255,255,.07)!important;
+    backdrop-filter:blur(22px) saturate(145%)!important;
+    -webkit-backdrop-filter:blur(22px) saturate(145%)!important;
+    transform:none!important;
+    z-index:100!important;
+  }
+  nav.lg\\:hidden::before{
+    content:""!important;
+    position:absolute!important;
+    inset:1px!important;
+    border-radius:22px!important;
+    background:linear-gradient(110deg,rgba(255,255,255,.045),transparent 42%,rgba(233,189,112,.035))!important;
+    pointer-events:none!important;
+  }
+  nav.lg\\:hidden>.nav-btn-mobile,
+  nav.lg\\:hidden>button,
+  nav.lg\\:hidden>[role="button"]{
+    position:relative!important;
+    z-index:1!important;
+    display:flex!important;
+    flex:1 1 0!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:4px!important;
+    width:0!important;
+    min-width:0!important;
+    max-width:none!important;
+    min-height:58px!important;
+    height:58px!important;
+    margin:0!important;
+    padding:5px 2px!important;
+    overflow:hidden!important;
+    border:1px solid transparent!important;
+    border-radius:16px!important;
+    background:transparent!important;
+    color:#9eacc1!important;
+    font-size:10px!important;
+    font-weight:600!important;
+    line-height:1.15!important;
+    white-space:nowrap!important;
+    box-shadow:none!important;
+    transform:none!important;
+  }
+  nav.lg\\:hidden>.nav-btn-mobile svg,
+  nav.lg\\:hidden>button svg,
+  nav.lg\\:hidden>[role="button"] svg{
+    display:block!important;
+    width:21px!important;
+    height:21px!important;
+    min-width:21px!important;
+    flex:0 0 21px!important;
+    opacity:.82!important;
+    color:currentColor!important;
+  }
+  nav.lg\\:hidden>.nav-btn-mobile.active,
+  nav.lg\\:hidden>.nav-btn-mobile[aria-current="page"],
+  nav.lg\\:hidden>button.active,
+  nav.lg\\:hidden>button[aria-current="page"],
+  nav.lg\\:hidden>[role="button"].active,
+  nav.lg\\:hidden>[role="button"][aria-current="page"]{
+    color:#ffe0a7!important;
+    border-color:rgba(233,189,112,.22)!important;
+    background:linear-gradient(180deg,rgba(233,189,112,.17),rgba(233,189,112,.075))!important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 5px 14px rgba(0,0,0,.16)!important;
+  }
+  nav.lg\\:hidden>.nav-btn-mobile.active::after,
+  nav.lg\\:hidden>.nav-btn-mobile[aria-current="page"]::after,
+  nav.lg\\:hidden>button.active::after,
+  nav.lg\\:hidden>button[aria-current="page"]::after{
+    content:""!important;
+    position:absolute!important;
+    top:3px!important;
+    left:50%!important;
+    width:17px!important;
+    height:2px!important;
+    border-radius:99px!important;
+    background:#f0c77f!important;
+    transform:translateX(-50%)!important;
+    box-shadow:0 0 9px rgba(240,199,127,.55)!important;
+  }
+  nav.lg\\:hidden>.nav-btn-mobile.active svg,
+  nav.lg\\:hidden>.nav-btn-mobile[aria-current="page"] svg,
+  nav.lg\\:hidden>button.active svg,
+  nav.lg\\:hidden>button[aria-current="page"] svg{
+    opacity:1!important;
+    transform:translateY(-1px)!important;
+  }
+  nav.lg\\:hidden>button:active,
+  nav.lg\\:hidden>[role="button"]:active{transform:scale(.96)!important}
+  main{padding-bottom:calc(112px + var(--safe-bottom))!important}
+}
+@media(max-width:370px){
+  nav.lg\\:hidden{inset-inline:7px!important;left:7px!important;right:7px!important;gap:2px!important;padding:6px!important}
+  nav.lg\\:hidden>.nav-btn-mobile,
+  nav.lg\\:hidden>button,
+  nav.lg\\:hidden>[role="button"]{font-size:9px!important}
+}
