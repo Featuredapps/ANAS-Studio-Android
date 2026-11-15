@@ -1,0 +1,7 @@
+name = "anas-studio-gemini"
+main = "worker.js"
+compatibility_date = "2026-11-15"
+
+[vars]
+GEMINI_MODEL = "gemini-2.5-flash"
+ALLOWED_ORIGIN = "https://anasgdxj.github.io"
