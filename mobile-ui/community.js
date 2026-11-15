@@ -5,7 +5,7 @@ window.__ANAS_COMMUNITY_READY__ = true;
 const API='https://anas-studio-updates-api.anasgdxj.workers.dev/api';
 const STORE=localStorage, DEVICE_KEY='anas.community.device.v1', READ_KEY='anas.community.read.v1';
 const deviceId=(function(){let id=STORE.getItem(DEVICE_KEY);if(!id){id=(crypto&&crypto.randomUUID)?crypto.randomUUID().replace(/-/g,''):Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2);STORE.setItem(DEVICE_KEY,id);}return id;})();
-const css = \`
+const css = `
 #anas-community-launcher{position:fixed;left:16px;bottom:calc(92px + env(safe-area-inset-bottom,0px));z-index:10020;border:1px solid #eac77d55;border-radius:999px;padding:12px 16px;background:linear-gradient(135deg,#f2d69c,#d9a957);color:#20180b;font-family:inherit;font-weight:700;font-size:13px;box-shadow:0 10px 28px #0008;display:flex;align-items:center;gap:8px;cursor:pointer}
 #anas-community-launcher:focus-visible,#anas-community button:focus-visible,#anas-community textarea:focus-visible{outline:2px solid #f6dca9;outline-offset:3px}
 #anas-community-launcher .ac-badge{min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:#9e352e;color:white;font-size:10px;display:none;align-items:center;justify-content:center}
@@ -43,7 +43,7 @@ const css = \`
 #anas-community .ac-notice span{display:block;font-size:11px;line-height:1.7;color:#aab8ca}
 @media(min-width:700px){#anas-community{align-items:center;padding:20px}#anas-community .ac-panel{height:min(78vh,820px);border-bottom:1px solid #a9bdd52c;border-radius:25px}}
 @media(prefers-reduced-motion:no-preference){#anas-community .ac-panel{animation:ac-rise .2s ease-out}@keyframes ac-rise{from{transform:translateY(18px);opacity:.7}to{transform:none;opacity:1}}}
-\`;
+`;
 const style=document.createElement('style');style.id='anas-community-styles';style.textContent=css;document.head.appendChild(style);
 const launcher=document.createElement('button');launcher.id='anas-community-launcher';launcher.type='button';launcher.innerHTML='<span aria-hidden="true">✦</span><span>المجتمع</span><span class="ac-badge" aria-live="polite"></span>';document.body.appendChild(launcher);
 const shell=document.createElement('section');shell.id='anas-community';shell.setAttribute('role','dialog');shell.setAttribute('aria-modal','true');shell.setAttribute('aria-label','مجتمع ANAS Studio');
