@@ -19,9 +19,9 @@ required = [
     "window.addEventListener('pagehide'",
     "PROJECT_AUDIO_STORE.set = function(projectId, audio)",
     "function startCompleteRender(",
-    "anasGeminiAssistant",
-    "function anasGeminiRun()",
-    "function anasGeminiSaveConfig()",
+    "ANAS Studio Gemini Assistant",
+    "window.anasGeminiRun=async function()",
+    "window.anasGeminiSaveConfig=function()",
 ]
 missing = [item for item in required if item not in html]
 if missing:
