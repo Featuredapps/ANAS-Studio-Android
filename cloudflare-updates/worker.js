@@ -67,7 +67,7 @@ export default {
   }
   if(p==="/api/admin/publish" && req.method==="POST") {
     const body=await req.json().catch(()=>null);
-    if(!body || typeof body.html!=="string" || new TextEncoder().encode(body.html).length>18000000 || !/<\\s*html[\\s>]/i.test(body.html)) return json({error:"ملف HTML غير صالح أو أكبر من 18MB"},400);
+    if(!body || typeof body.html!=="string" || new TextEncoder().encode(body.html).length>18000000 || !/<\s*html[\s>]/i.test(body.html)) return json({error:"ملف HTML غير صالح أو أكبر من 18MB"},400);
     const version=Date.now(), key="build:"+version;
     await env.STUDIO_KV.put(key,body.html);
     const manifest={version,key,sha256:await digest(body.html),bytes:new TextEncoder().encode(body.html).length,published:true,notes:String(body.notes||"").slice(0,500),publishedAt:new Date().toISOString()};
