@@ -743,3 +743,17 @@ jobs:
           draft: false
           prerelease: false
 
+      - name: Synchronize release title and dated changelog
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const { owner, repo } = context.repo;
+            const { data: release } = await github.rest.repos.getReleaseByTag({ owner, repo, tag: 'latest' });
+            const body = fs.readFileSync('release-notes.md', 'utf8');
+            await github.rest.repos.updateRelease({
+              owner, repo, release_id: release.id,
+              name: `ANAS Studio - Build #${process.env.GITHUB_RUN_NUMBER}`,
+              body
+            });
+
