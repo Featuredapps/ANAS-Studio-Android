@@ -18,7 +18,7 @@ async function sign(value, secret) {
 }
 function b64url(bytes) {
   let s=""; for (const b of bytes) s+=String.fromCharCode(b);
-  return btoa(s).replace(/=/g,"").replace(/\\+/g,"-").replace(/\\//g,"_");
+  return btoa(s).replace(/=/g,"").replace(/\+/g,"-").replace(/\//g,"_");
 }
 async function tokenFor(secret) {
   const payload=b64url(new TextEncoder().encode(JSON.stringify({exp:Date.now()+8*60*60*1000, nonce:b64url(crypto.getRandomValues(new Uint8Array(16)))})));
@@ -61,7 +61,7 @@ export default {
     return json({token:await tokenFor(env.ADMIN_PASSWORD),expiresIn:28800});
   }
   if(p.startsWith("/api/admin/")) {
-    if(!(await validToken((req.headers.get("Authorization")||"").replace(/^Bearer\\s+/i,""),env.ADMIN_PASSWORD||"")))
+    if(!(await validToken((req.headers.get("Authorization")||"").replace(/^Bearer\s+/i,""),env.ADMIN_PASSWORD||"")))
       return json({error:"انتهت الجلسة أو لا يوجد تصريح. سجّل الدخول مجدداً."},401);
     if(!env.STUDIO_KV) return json({error:"KV binding STUDIO_KV is not configured"},503);
   }
