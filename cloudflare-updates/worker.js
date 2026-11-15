@@ -79,7 +79,7 @@ export default {
     if(!Number.isSafeInteger(version)||version<=0) return json({error:"رقم الإصدار غير صالح"},400);
     const key="build:"+version, html=await env.STUDIO_KV.get(key);
     if(!html)return json({error:"الإصدار غير موجود"},404);
-    const manifest={version,key,notes:"Rollback",publishedAt:new Date().toISOString()};
+    const manifest={version,key,sha256:await digest(html),bytes:new TextEncoder().encode(html).length,published:true,notes:"Rollback",publishedAt:new Date().toISOString()};
     await env.STUDIO_KV.put("published",JSON.stringify(manifest));
     return json({ok:true,manifest});
   }
