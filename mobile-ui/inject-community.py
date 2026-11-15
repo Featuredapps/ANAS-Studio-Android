@@ -3,6 +3,8 @@ import sys
 html_path, js_path = Path(sys.argv[1]), Path(sys.argv[2])
 html = html_path.read_text(encoding="utf-8")
 js = js_path.read_text(encoding="utf-8")
+# Permit the app's WebView to reach the community API under its existing CSP.
+html = html.replace("connect-src 'self' https://api.github.com;", "connect-src 'self' https://api.github.com https://anas-studio-updates-api.anasgdxj.workers.dev;")
 if "ANAS_COMMUNITY_READY" in html:
     raise SystemExit("Community UI already injected; refusing duplicate insertion.")
 pos = html.lower().rfind("</body>")
