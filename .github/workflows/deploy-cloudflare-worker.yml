@@ -54,6 +54,6 @@ jobs:
           BYTES="$(wc -c < /tmp/anas-studio/index.html | tr -d ' ')"
           SHA256="$(sha256sum /tmp/anas-studio/index.html | cut -d ' ' -f1)"
           printf '{"version":%s,"key":"build:%s","sha256":"%s","bytes":%s,"published":true,"notes":"Initial bundled Android interface published by GitHub Actions","publishedAt":"%s"}' "$VERSION" "$VERSION" "$SHA256" "$BYTES" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > /tmp/anas-studio/manifest.json
-          npx --yes wrangler kv key put "build:$VERSION" --path /tmp/anas-studio/index.html --namespace-id "$CF_KV_NAMESPACE_ID" --account-id "$CLOUDFLARE_ACCOUNT_ID"
-          npx --yes wrangler kv key put "published" --path /tmp/anas-studio/manifest.json --namespace-id "$CF_KV_NAMESPACE_ID" --account-id "$CLOUDFLARE_ACCOUNT_ID"
+          npx --yes wrangler kv key put "build:$VERSION" --path /tmp/anas-studio/index.html --namespace-id "$CF_KV_NAMESPACE_ID"
+          npx --yes wrangler kv key put "published" --path /tmp/anas-studio/manifest.json --namespace-id "$CF_KV_NAMESPACE_ID"
           echo "Published initial remote HTML build $VERSION ($BYTES bytes, SHA-256 $SHA256)."
