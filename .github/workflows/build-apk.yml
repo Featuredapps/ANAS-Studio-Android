@@ -78,6 +78,9 @@ jobs:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CF_KV_NAMESPACE_ID: ${{ vars.CLOUDFLARE_KV_NAMESPACE_ID }}
         shell: bash
         run: |
           set -euo pipefail
@@ -591,6 +594,19 @@ jobs:
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" sign --ks "$KEYSTORE_FILE" --ks-key-alias "$ANDROID_KEY_ALIAS" --ks-pass env:ANDROID_KEYSTORE_PASSWORD --key-pass env:ANDROID_KEY_PASSWORD --out "$RUNNER_TEMP/anas-studio-signed.apk" "$APK"
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose "$RUNNER_TEMP/anas-studio-signed.apk"
           install -D "$RUNNER_TEMP/anas-studio-signed.apk" "$GITHUB_WORKSPACE/app-release.apk"
+          # Publish the exact validated HTML that was used to build this APK.
+          test -n "$CLOUDFLARE_API_TOKEN" || { echo "::error::Missing CLOUDFLARE_API_TOKEN secret."; exit 1; }
+          test -n "$CLOUDFLARE_ACCOUNT_ID" || { echo "::error::Missing CLOUDFLARE_ACCOUNT_ID variable."; exit 1; }
+          test -n "$CF_KV_NAMESPACE_ID" || { echo "::error::Missing CLOUDFLARE_KV_NAMESPACE_ID variable."; exit 1; }
+          HTML_TO_PUBLISH="$GITHUB_WORKSPACE/$HTML_FILE"
+          test -s "$HTML_TO_PUBLISH"
+          VERSION="$(date +%s%3N)"
+          BYTES="$(wc -c < "$HTML_TO_PUBLISH" | tr -d ' ')"
+          SHA256="$(sha256sum "$HTML_TO_PUBLISH" | cut -d ' ' -f1)"
+          printf '{"version":%s,"key":"build:%s","sha256":"%s","bytes":%s,"published":true,"notes":"Automatic publish from commit %s","publishedAt":"%s"}' "$VERSION" "$VERSION" "$SHA256" "$BYTES" "$GITHUB_SHA" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "$RUNNER_TEMP/anas-studio-manifest.json"
+          npx --yes wrangler@3.90.0 kv key put "build:$VERSION" --path "$HTML_TO_PUBLISH" --namespace-id "$CF_KV_NAMESPACE_ID" --remote
+          npx --yes wrangler@3.90.0 kv key put "published" --path "$RUNNER_TEMP/anas-studio-manifest.json" --namespace-id "$CF_KV_NAMESPACE_ID" --remote
+          echo "Published processed Android HTML build $VERSION ($BYTES bytes, SHA-256 $SHA256)."
 
 
       - name: Upload APK
