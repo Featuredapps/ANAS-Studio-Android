@@ -39,6 +39,14 @@ jobs:
           workingDirectory: cloudflare-updates
           command: deploy
 
+      - name: Restore legacy update endpoint for already-installed apps
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: cloudflare-updates
+          command: deploy --config wrangler-legacy.toml
+
       - name: Publish bundled Android HTML as the initial remote build
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
