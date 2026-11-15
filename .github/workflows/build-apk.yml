@@ -360,8 +360,8 @@ jobs:
                   s = s.replace(anchor, anchor + "\n" + item, 1)
 
           old_intercept = """            @Override public android.webkit.WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
-                          return assetLoader.shouldInterceptRequest(request.getUrl());
-                      }"""
+                return assetLoader.shouldInterceptRequest(request.getUrl());
+            }"""
           new_intercept = """            @Override public android.webkit.WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
                           Uri uri = request.getUrl();
                           if ("appassets.androidplatform.net".equals(uri.getHost()) && "/assets/index.html".equals(uri.getPath())) {
