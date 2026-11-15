@@ -332,72 +332,207 @@ jobs:
           p.write_text(s)
           PY
                     MAIN_ACTIVITY="$(find "$PROJECT_DIR" -path '*/src/main/java/com/anasgdxj/studio/MainActivity.java' -type f -print -quit)"
+          test -n "$MAIN_ACTIVITY"
           MAIN_ACTIVITY="$MAIN_ACTIVITY" python3 - <<'PY'
           import os
           from pathlib import Path
-          p=Path(os.environ["MAIN_ACTIVITY"])
-          s=p.read_text()
-          imports=["import java.net.HttpURLConnection;","import java.net.URL;","import java.security.MessageDigest;","import java.io.ByteArrayInputStream;","import java.io.ByteArrayOutputStream;","import java.nio.charset.StandardCharsets;"]
+
+          p = Path(os.environ["MAIN_ACTIVITY"])
+          s = p.read_text()
+
+          imports = [
+              "import java.net.HttpURLConnection;",
+              "import java.net.URL;",
+              "import java.security.MessageDigest;",
+              "import java.nio.charset.StandardCharsets;",
+              "import java.nio.file.Files;",
+              "import java.nio.file.StandardCopyOption;",
+              "import java.nio.file.AtomicMoveNotSupportedException;",
+              "import java.io.ByteArrayOutputStream;",
+              "import java.util.Locale;",
+              "import android.util.Log;",
+          ]
+          anchor = "import java.io.OutputStream;"
+          if anchor not in s:
+              raise SystemExit("MainActivity.java: expected OutputStream import was not found")
           for item in imports:
-              if item not in s: s=s.replace("import java.io.OutputStream;", "import java.io.OutputStream;\n"+item,1)
-          s=s.replace('webView.loadUrl("https://appassets.androidplatform.net/assets/index.html");','''new Thread(() -> {
-                      fetchRemoteUpdate();
-                      runOnUiThread(() -> webView.loadUrl("https://appassets.androidplatform.net/assets/index.html"));
-                  }).start();''',1)
-          old='return assetLoader.shouldInterceptRequest(request.getUrl());'
-          new='''Uri uri=request.getUrl();
+              if item not in s:
+                  s = s.replace(anchor, anchor + "\\n" + item, 1)
+
+          old_intercept = """            @Override public android.webkit.WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+                          return assetLoader.shouldInterceptRequest(request.getUrl());
+                      }"""
+          new_intercept = """            @Override public android.webkit.WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+                          Uri uri = request.getUrl();
                           if ("appassets.androidplatform.net".equals(uri.getHost()) && "/assets/index.html".equals(uri.getPath())) {
-                              File cached=new File(getFilesDir(),"remote-index.html");
-                              if (cached.isFile() && cached.length()>100 && cached.length()<18000000) {
-                                  try { return new WebResourceResponse("text/html","UTF-8",new java.io.FileInputStream(cached)); }
-                                  catch(Exception ignored) {}
+                              File cached = new File(getFilesDir(), "remote-index.html");
+                              if (cached.isFile() && cached.length() > 100 && cached.length() <= 18000000) {
+                                  try {
+                                      return new WebResourceResponse("text/html", "UTF-8", new java.io.FileInputStream(cached));
+                                  } catch (Exception e) {
+                                      Log.w("ANASStudioUpdates", "Cached web build could not be opened; using bundled assets", e);
+                                  }
                               }
                           }
-                          return assetLoader.shouldInterceptRequest(uri);'''
-          if old not in s: raise SystemExit("asset interception anchor missing")
-          s=s.replace(old,new,1)
-          methods=r'''
-              private void fetchRemoteUpdate() {
-                  HttpURLConnection c=null;
+                          return assetLoader.shouldInterceptRequest(uri);
+                      }"""
+          if old_intercept not in s:
+              raise SystemExit("MainActivity.java: WebViewAssetLoader interception block did not match expected source")
+          s = s.replace(old_intercept, new_intercept, 1)
+
+          old_load = '        webView.loadUrl("https://appassets.androidplatform.net/assets/index.html");'
+          new_load = """        // Always show the bundled app immediately. A remote build is checked in the background.
+                  webView.loadUrl("https://appassets.androidplatform.net/assets/index.html");
+                  new Thread(() -> {
+                      boolean updated = fetchRemoteUpdate();
+                      if (updated) {
+                          runOnUiThread(() -> {
+                              if (webView != null && !isFinishing()) webView.reload();
+                          });
+                      }
+                  }, "ANAS-Studio-UpdateCheck").start();"""
+          if old_load not in s:
+              raise SystemExit("MainActivity.java: local WebView load statement was not found")
+          s = s.replace(old_load, new_load, 1)
+
+          methods = r'''
+              private static final String UPDATE_BASE_URL = "https://anas-studio-android.anasgdxj.workers.dev";
+
+              private boolean fetchRemoteUpdate() {
+                  HttpURLConnection versionConnection = null;
+                  HttpURLConnection htmlConnection = null;
                   try {
-                      c=(HttpURLConnection)new URL("https://anas-studio-android.anasgdxj.workers.dev/api/version").openConnection();
-                      c.setConnectTimeout(5000); c.setReadTimeout(7000); c.setUseCaches(false);
-                      if(c.getResponseCode()!=200)return;
-                      ByteArrayOutputStream b=new ByteArrayOutputStream();
-                      try(java.io.InputStream in=c.getInputStream()){ byte[] buf=new byte[4096]; int n; while((n=in.read(buf))!=-1){ if(b.size()+n>65536)return; b.write(buf,0,n); } }
-                      org.json.JSONObject m=new org.json.JSONObject(b.toString("UTF-8"));
-                      if(!m.optBoolean("published",false))return;
-                      long version=m.optLong("version",0); String hash=m.optString("sha256","");
-                      if(version<=0 || hash.length()!=64)return;
-                      File meta=new File(getFilesDir(),"remote-version.txt");
-                      if(meta.isFile() && meta.length()<100){ String old=new String(java.nio.file.Files.readAllBytes(meta.toPath()),StandardCharsets.UTF_8).trim(); if(old.equals(Long.toString(version)))return; }
-                      HttpURLConnection h=(HttpURLConnection)new URL("https://anas-studio-android.anasgdxj.workers.dev/app").openConnection();
-                      h.setConnectTimeout(7000); h.setReadTimeout(12000); h.setUseCaches(false);
-                      if(h.getResponseCode()!=200 || !h.getContentType().toLowerCase().contains("text/html")){h.disconnect();return;}
-                      ByteArrayOutputStream html=new ByteArrayOutputStream();
-                      try(java.io.InputStream in=h.getInputStream()){byte[] buf=new byte[8192];int n;while((n=in.read(buf))!=-1){if(html.size()+n>18000000){h.disconnect();return;}html.write(buf,0,n);}}
-                      h.disconnect();
-                      byte[] data=html.toByteArray();
-                      String actual=hex(MessageDigest.getInstance("SHA-256").digest(data));
-                      String header=h.getHeaderField("X-Studio-SHA256");
-                      if(!hash.equalsIgnoreCase(actual) || !hash.equalsIgnoreCase(header) || data.length<100)return;
-                      String text=new String(data,StandardCharsets.UTF_8).toLowerCase(java.util.Locale.ROOT);
-                      if(!text.contains("<html"))return;
-                      File tmp=new File(getFilesDir(),"remote-index.tmp"), dest=new File(getFilesDir(),"remote-index.html");
-                      try(FileOutputStream out=new FileOutputStream(tmp)){out.write(data);out.getFD().sync();}
-                      if(!tmp.renameTo(dest)){tmp.delete();return;}
-                      File mt=new File(getFilesDir(),"remote-version.tmp");
-                      try(FileOutputStream out=new FileOutputStream(mt)){out.write(Long.toString(version).getBytes(StandardCharsets.UTF_8));out.getFD().sync();}
-                      mt.renameTo(meta);
-                  } catch(Exception ignored) { } finally { if(c!=null)c.disconnect(); }
+                      versionConnection = (HttpURLConnection) new URL(UPDATE_BASE_URL + "/api/version").openConnection();
+                      versionConnection.setRequestMethod("GET");
+                      versionConnection.setConnectTimeout(5000);
+                      versionConnection.setReadTimeout(7000);
+                      versionConnection.setUseCaches(false);
+                      if (versionConnection.getResponseCode() != 200) return false;
+
+                      ByteArrayOutputStream manifestBytes = new ByteArrayOutputStream();
+                      try (java.io.InputStream in = versionConnection.getInputStream()) {
+                          byte[] buffer = new byte[4096];
+                          int count;
+                          while ((count = in.read(buffer)) != -1) {
+                              if (manifestBytes.size() + count > 65536) return false;
+                              manifestBytes.write(buffer, 0, count);
+                          }
+                      }
+
+                      org.json.JSONObject manifest = new org.json.JSONObject(
+                          new String(manifestBytes.toByteArray(), StandardCharsets.UTF_8));
+                      if (!manifest.optBoolean("published", false)) return false;
+
+                      long version = manifest.optLong("version", 0);
+                      long expectedBytes = manifest.optLong("bytes", -1);
+                      String expectedHash = manifest.optString("sha256", "").trim();
+                      if (version <= 0 || expectedHash.length() != 64 || expectedBytes <= 100 || expectedBytes > 18000000) {
+                          Log.w("ANASStudioUpdates", "Cloudflare returned an invalid update manifest");
+                          return false;
+                      }
+
+                      File cachedHtml = new File(getFilesDir(), "remote-index.html");
+                      File cachedVersion = new File(getFilesDir(), "remote-version.txt");
+                      if (cachedHtml.isFile() && cachedHtml.length() == expectedBytes && cachedVersion.isFile()) {
+                          String currentVersion = new String(Files.readAllBytes(cachedVersion.toPath()), StandardCharsets.UTF_8).trim();
+                          if (Long.toString(version).equals(currentVersion)) return false;
+                      }
+
+                      htmlConnection = (HttpURLConnection) new URL(UPDATE_BASE_URL + "/app").openConnection();
+                      htmlConnection.setRequestMethod("GET");
+                      htmlConnection.setConnectTimeout(7000);
+                      htmlConnection.setReadTimeout(15000);
+                      htmlConnection.setUseCaches(false);
+                      if (htmlConnection.getResponseCode() != 200) return false;
+                      String contentType = htmlConnection.getContentType();
+                      if (contentType == null || !contentType.toLowerCase(Locale.ROOT).contains("text/html")) return false;
+                      String responseHash = htmlConnection.getHeaderField("X-Studio-SHA256");
+
+                      ByteArrayOutputStream htmlBytes = new ByteArrayOutputStream((int) Math.min(expectedBytes, 65536));
+                      try (java.io.InputStream in = htmlConnection.getInputStream()) {
+                          byte[] buffer = new byte[8192];
+                          int count;
+                          while ((count = in.read(buffer)) != -1) {
+                              if (htmlBytes.size() + count > 18000000) return false;
+                              htmlBytes.write(buffer, 0, count);
+                          }
+                      }
+                      byte[] html = htmlBytes.toByteArray();
+                      if (html.length != expectedBytes) {
+                          Log.w("ANASStudioUpdates", "Downloaded update size does not match its manifest");
+                          return false;
+                      }
+
+                      String actualHash = toHex(MessageDigest.getInstance("SHA-256").digest(html));
+                      if (!expectedHash.equalsIgnoreCase(actualHash) ||
+                          responseHash == null || !expectedHash.equalsIgnoreCase(responseHash.trim())) {
+                          Log.w("ANASStudioUpdates", "Downloaded update failed SHA-256 verification");
+                          return false;
+                      }
+
+                      String htmlText = new String(html, StandardCharsets.UTF_8).toLowerCase(Locale.ROOT);
+                      if (!htmlText.contains("<html")) {
+                          Log.w("ANASStudioUpdates", "Downloaded update is not an HTML document");
+                          return false;
+                      }
+
+                      File htmlTemp = new File(getFilesDir(), "remote-index.tmp");
+                      File versionTemp = new File(getFilesDir(), "remote-version.tmp");
+                      try (FileOutputStream out = new FileOutputStream(htmlTemp)) {
+                          out.write(html);
+                          out.getFD().sync();
+                      }
+                      replaceAtomically(htmlTemp, cachedHtml);
+                      try (FileOutputStream out = new FileOutputStream(versionTemp)) {
+                          out.write(Long.toString(version).getBytes(StandardCharsets.UTF_8));
+                          out.getFD().sync();
+                      }
+                      replaceAtomically(versionTemp, cachedVersion);
+                      Log.i("ANASStudioUpdates", "Installed verified web update " + version);
+                      return true;
+                  } catch (Exception e) {
+                      Log.w("ANASStudioUpdates", "Update check failed; keeping the last local/cached build", e);
+                      return false;
+                  } finally {
+                      if (versionConnection != null) versionConnection.disconnect();
+                      if (htmlConnection != null) htmlConnection.disconnect();
+                  }
               }
-              private String hex(byte[] data) {
-                  StringBuilder s=new StringBuilder(); for(byte v:data)s.append(String.format(java.util.Locale.ROOT,"%02x",v&255)); return s.toString();
+
+              private void replaceAtomically(File source, File destination) throws java.io.IOException {
+                  try {
+                      Files.move(source.toPath(), destination.toPath(),
+                          StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+                  } catch (AtomicMoveNotSupportedException e) {
+                      Files.move(source.toPath(), destination.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                  }
               }
+
+              private String toHex(byte[] bytes) {
+                  StringBuilder result = new StringBuilder(bytes.length * 2);
+                  for (byte value : bytes) result.append(String.format(Locale.ROOT, "%02x", value & 0xff));
+                  return result.toString();
+              }
+
           '''
-          if "private void fetchRemoteUpdate()" not in s:
-              s=s.replace("    @Override protected void onActivityResult",methods + chr(10) + "    @Override protected void onActivityResult",1)
+          if "private boolean fetchRemoteUpdate()" not in s:
+              anchor = "    @Override protected void onActivityResult"
+              if anchor not in s:
+                  raise SystemExit("MainActivity.java: could not locate activity-result method for update helper insertion")
+              s = s.replace(anchor, methods + anchor, 1)
+
+          required = [
+              "UPDATE_BASE_URL + \"/api/version\"",
+              "UPDATE_BASE_URL + \"/app\"",
+              "MessageDigest.getInstance(\"SHA-256\")",
+              "webView.reload()",
+              "assetLoader.shouldInterceptRequest(uri)",
+          ]
+          missing = [item for item in required if item not in s]
+          if missing:
+              raise SystemExit("MainActivity.java update integration incomplete: " + ", ".join(missing))
           p.write_text(s)
+          print("Verified MainActivity.java: bundled-first startup, Cloudflare version check, SHA-256 validation, atomic cache, offline fallback.")
           PY
           HTML_FILE="$(find "$PROJECT_DIR" -path '*/assets/index.html' -type f -print -quit)"
           test -n "$HTML_FILE"
