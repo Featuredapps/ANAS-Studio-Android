@@ -42,6 +42,7 @@ export default {
  async fetch(req, env) {
   if(req.method==="OPTIONS") return new Response(null,{headers:CORS});
   const u=new URL(req.url), p=u.pathname;
+  if(p==="/" && req.method==="GET") return Response.redirect(new URL("/app",req.url).toString(),302);
   if(p==="/api/health" && req.method==="GET") return json({ok:true,service:"ANAS Studio Update Service",storage:!!env.STUDIO_KV});
   if(p==="/api/version" && req.method==="GET") {
     if(!env.STUDIO_KV) return json({error:"KV binding STUDIO_KV is not configured"},503);
