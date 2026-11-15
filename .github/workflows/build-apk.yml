@@ -357,7 +357,7 @@ jobs:
               raise SystemExit("MainActivity.java: expected OutputStream import was not found")
           for item in imports:
               if item not in s:
-                  s = s.replace(anchor, anchor + "\\n" + item, 1)
+                  s = s.replace(anchor, anchor + "\n" + item, 1)
 
           old_intercept = """            @Override public android.webkit.WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
                           return assetLoader.shouldInterceptRequest(request.getUrl());
