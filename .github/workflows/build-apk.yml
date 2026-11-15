@@ -359,26 +359,35 @@ jobs:
               if item not in s:
                   s = s.replace(anchor, anchor + "\n" + item, 1)
 
-          old_intercept = """            @Override public android.webkit.WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
-                return assetLoader.shouldInterceptRequest(request.getUrl());
-            }"""
-          new_intercept = """            @Override public android.webkit.WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
-                          Uri uri = request.getUrl();
-                          if ("appassets.androidplatform.net".equals(uri.getHost()) && "/assets/index.html".equals(uri.getPath())) {
-                              File cached = new File(getFilesDir(), "remote-index.html");
-                              if (cached.isFile() && cached.length() > 100 && cached.length() <= 18000000) {
-                                  try {
-                                      return new WebResourceResponse("text/html", "UTF-8", new java.io.FileInputStream(cached));
-                                  } catch (Exception e) {
-                                      Log.w("ANASStudioUpdates", "Cached web build could not be opened; using bundled assets", e);
-                                  }
-                              }
-                          }
-                          return assetLoader.shouldInterceptRequest(uri);
-                      }"""
-          if old_intercept not in s:
-              raise SystemExit("MainActivity.java: WebViewAssetLoader interception block did not match expected source")
-          s = s.replace(old_intercept, new_intercept, 1)
+          import re
+          pattern = re.compile(
+              r'(?m)^([ \\t]*)@Override public android\\.webkit\\.WebResourceResponse '
+              r'shouldInterceptRequest\\(WebView view, WebResourceRequest request\\) \\{\\r?\\n'
+              r'[ \\t]*return assetLoader\\.shouldInterceptRequest\\(request\\.getUrl\\(\\)\\);\\r?\\n'
+              r'[ \\t]*\\}'
+          )
+          match = pattern.search(s)
+          if not match:
+              raise SystemExit("MainActivity.java: could not locate the original WebViewAssetLoader interception method")
+          indent = match.group(1)
+          lines = [
+              "@Override public android.webkit.WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {",
+              "    Uri uri = request.getUrl();",
+              '    if ("appassets.androidplatform.net".equals(uri.getHost()) && "/assets/index.html".equals(uri.getPath())) {',
+              '        File cached = new File(getFilesDir(), "remote-index.html");',
+              "        if (cached.isFile() && cached.length() > 100 && cached.length() <= 18000000) {",
+              "            try {",
+              '                return new WebResourceResponse("text/html", "UTF-8", new java.io.FileInputStream(cached));',
+              "            } catch (Exception e) {",
+              '                Log.w("ANASStudioUpdates", "Cached web build could not be opened; using bundled assets", e);',
+              "            }",
+              "        }",
+              "    }",
+              "    return assetLoader.shouldInterceptRequest(uri);",
+              "}"
+          ]
+          replacement = "\\n".join(indent + line for line in lines)
+          s = s[:match.start()] + replacement + s[match.end():]
 
           old_load = '        webView.loadUrl("https://appassets.androidplatform.net/assets/index.html");'
           new_load = """        // Always show the bundled app immediately. A remote build is checked in the background.
