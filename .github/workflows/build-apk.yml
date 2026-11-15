@@ -410,7 +410,7 @@ jobs:
           s = s.replace(load_anchor, load_anchor + "\n        startRemoteUpdateCheck();", 1)
 
           methods = r'''
-              private static final String UPDATE_BASE_URL = "https://anas-studio-android.anasgdxj.workers.dev";
+              private static final String UPDATE_BASE_URL = "https://anas-studio-updates-api.anasgdxj.workers.dev";
 
               private void startRemoteUpdateCheck() {
                   Thread updateThread = new Thread(() -> {
