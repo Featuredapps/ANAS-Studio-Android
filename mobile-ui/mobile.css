@@ -607,3 +607,209 @@ nav[class~="lg:hidden"]{isolation:isolate;}
 :is([id*=login i],[class*=login i],[id*=auth i],[class*=auth i],[id*=signin i],[class*=signin i],[id*=signup i],[class*=signup i],[id*=register i],[class*=register i]) :is(input,select,textarea){font-size:16px!important;}
 :is([id*=login i],[class*=login i],[id*=auth i],[class*=auth i],[id*=signin i],[class*=signin i],[id*=signup i],[class*=signup i],[id*=register i],[class*=register i]) :is(button,input[type=submit],[role=button]){width:100%;}
 @media(max-width:420px){main{padding-inline:13px!important;} :is([id*=login i],[class*=login i],[id*=auth i],[class*=auth i],[id*=signin i],[class*=signin i],[id*=signup i],[class*=signup i],[id*=register i],[class*=register i]){border-radius:22px!important;}}
+
+
+/* ANAS Studio — cohesive Android UI layer (2026 refresh).
+   Final, intentionally small override layer to normalize earlier incremental styles. */
+:root{
+  --studio-bg:#080f1b;
+  --studio-surface:#111c2c;
+  --studio-surface-2:#17253a;
+  --studio-stroke:rgba(177,199,228,.15);
+  --studio-gold:#efc77f;
+  --studio-text:#f4f7fc;
+  --studio-muted:#a3b1c6;
+}
+html,body{background-color:var(--studio-bg)!important;color:var(--studio-text)!important}
+body{
+  background:
+    radial-gradient(ellipse at 92% -12%,rgba(74,119,181,.19),transparent 38%),
+    radial-gradient(ellipse at 0 48%,rgba(75,166,166,.075),transparent 34%),
+    linear-gradient(180deg,#0b1423 0%,#080f1b 68%,#0b1421 100%)!important;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+header{
+  background:rgba(9,16,28,.94)!important;
+  border-bottom:1px solid var(--studio-stroke)!important;
+  box-shadow:0 8px 28px rgba(0,0,0,.24)!important;
+}
+header>div{min-height:68px!important}
+main{
+  width:100%!important;
+  max-width:1120px!important;
+  padding:22px 16px calc(116px + env(safe-area-inset-bottom,0px))!important;
+}
+.app-page{gap:22px!important}
+.app-page h1,.app-page h2,.app-page h3{
+  color:var(--studio-text)!important;
+  line-height:1.42!important;
+  letter-spacing:-.25px;
+  text-wrap:pretty;
+}
+.app-page p{line-height:1.75}
+.app-page [class*="rounded-3xl"],.app-page [class*="rounded-2xl"]{
+  border-radius:21px!important;
+}
+.app-page [class*="bg-zinc-950"],.app-page [class*="bg-zinc-900"],
+.app-page [class*="bg-black/"],.app-page [class*="bg-[#0E0E11]"],
+.app-page [class*="bg-[#121217]"]{
+  background-color:rgba(17,28,44,.96)!important;
+}
+.app-page [class*="border-zinc-800"],.app-page [class*="border-zinc-700"]{
+  border-color:var(--studio-stroke)!important;
+}
+.app-page button:not(.nav-btn-mobile):not(.nav-btn-desktop){
+  min-height:46px!important;
+  border-radius:14px!important;
+  font-weight:650;
+  transition:transform .16s ease,filter .16s ease,box-shadow .16s ease!important;
+}
+.app-page button:not(.nav-btn-mobile):not(.nav-btn-desktop):active{
+  transform:scale(.975)!important;
+}
+.app-page button[class*="bg-sky-500"],.app-page button[class*="bg-amber-500"]:not([class*="/10"]){
+  background:linear-gradient(120deg,#f5d79c,#dca957)!important;
+  color:#21180b!important;
+  border:1px solid rgba(255,235,197,.35)!important;
+  box-shadow:0 8px 22px rgba(212,163,88,.18)!important;
+}
+.app-page input:not([type=checkbox]):not([type=range]),
+.app-page select,.app-page textarea{
+  min-height:48px!important;
+  border:1px solid rgba(177,199,228,.2)!important;
+  border-radius:14px!important;
+  background:#0c1726!important;
+  color:#f4f7fc!important;
+  font-size:16px!important;
+}
+.app-page input:focus,.app-page select:focus,.app-page textarea:focus{
+  border-color:rgba(239,199,127,.76)!important;
+  box-shadow:0 0 0 3px rgba(239,199,127,.12)!important;
+}
+.app-page input::placeholder,.app-page textarea::placeholder{color:#7f8da2!important}
+#page-projects>div:first-child{
+  border:1px solid rgba(239,199,127,.2)!important;
+  border-radius:24px!important;
+  background:
+    radial-gradient(ellipse at 100% 0,rgba(239,199,127,.2),transparent 48%),
+    radial-gradient(ellipse at 0 100%,rgba(79,145,188,.14),transparent 52%),
+    linear-gradient(135deg,#1a2a42,#101b2b 76%)!important;
+  box-shadow:0 20px 48px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.05)!important;
+}
+#projectsGrid{gap:14px!important}
+#projectsGrid>div{
+  min-height:150px;
+  border:1px solid var(--studio-stroke)!important;
+  border-radius:19px!important;
+  background:linear-gradient(145deg,#17263b,#101a29 78%)!important;
+  box-shadow:0 12px 28px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.025)!important;
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease!important;
+}
+#projectsGrid>div:active{transform:scale(.99)}
+#page-script [data-scene-text]{
+  line-height:1.9!important;
+  border-radius:15px!important;
+}
+#page-audio canvas,#directorCanvas{max-width:100%;border-radius:16px}
+#appToast{
+  background:rgba(18,30,47,.98)!important;
+  border:1px solid rgba(177,199,228,.2)!important;
+}
+nav[class~="lg:hidden"]{
+  position:fixed!important;
+  inset:auto 0 0 0!important;
+  z-index:1000!important;
+  display:grid!important;
+  grid-template-columns:repeat(5,minmax(0,1fr))!important;
+  gap:4px!important;
+  width:100%!important;
+  height:calc(78px + env(safe-area-inset-bottom,0px))!important;
+  min-height:78px!important;
+  box-sizing:border-box!important;
+  padding:7px 8px calc(7px + env(safe-area-inset-bottom,0px))!important;
+  margin:0!important;
+  border:0!important;
+  border-top:1px solid rgba(177,199,228,.17)!important;
+  border-radius:0!important;
+  background:rgba(12,22,37,.98)!important;
+  box-shadow:0 -10px 30px rgba(0,0,0,.34)!important;
+  backdrop-filter:blur(18px)!important;
+  -webkit-backdrop-filter:blur(18px)!important;
+}
+nav[class~="lg:hidden"]::before{display:none!important;content:none!important}
+nav[class~="lg:hidden"]>button,
+nav[class~="lg:hidden"]>.nav-btn-mobile,
+nav[class~="lg:hidden"]>[role="button"]{
+  display:flex!important;
+  min-width:0!important;
+  width:100%!important;
+  height:62px!important;
+  min-height:62px!important;
+  padding:5px 2px!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:5px!important;
+  border:1px solid transparent!important;
+  border-radius:15px!important;
+  background:transparent!important;
+  color:#9eacc1!important;
+  font-size:10px!important;
+  font-weight:650!important;
+  line-height:1.2!important;
+  white-space:nowrap!important;
+  box-shadow:none!important;
+}
+nav[class~="lg:hidden"]>button svg,
+nav[class~="lg:hidden"]>.nav-btn-mobile svg,
+nav[class~="lg:hidden"]>[role="button"] svg{
+  width:22px!important;height:22px!important;min-width:22px!important;
+  flex:0 0 22px!important;opacity:.9!important;
+}
+nav[class~="lg:hidden"]>button.active,
+nav[class~="lg:hidden"]>.nav-btn-mobile.active,
+nav[class~="lg:hidden"]>[role="button"].active,
+nav[class~="lg:hidden"]>button[aria-current="page"],
+nav[class~="lg:hidden"]>.nav-btn-mobile[aria-current="page"]{
+  color:#f5d69b!important;
+  background:rgba(239,199,127,.105)!important;
+  border-color:rgba(239,199,127,.2)!important;
+}
+nav[class~="lg:hidden"]>button:focus-visible,
+nav[class~="lg:hidden"]>.nav-btn-mobile:focus-visible{
+  outline:2px solid var(--studio-gold)!important;outline-offset:-2px!important;
+}
+:is([id*=login i],[class*=login i],[id*=auth i],[class*=auth i],
+[id*=signin i],[class*=signin i],[id*=signup i],[class*=signup i],
+[id*=register i],[class*=register i]){
+  width:min(100%,480px)!important;
+  margin-inline:auto!important;
+}
+:is([id*=login i],[class*=login i],[id*=auth i],[class*=auth i],
+[id*=signin i],[class*=signin i],[id*=signup i],[class*=signup i],
+[id*=register i],[class*=register i]) :is(input,select,textarea){
+  min-height:50px!important;
+  font-size:16px!important;
+  border-radius:15px!important;
+}
+:is([id*=login i],[class*=login i],[id*=auth i],[class*=auth i],
+[id*=signin i],[class*=signin i],[id*=signup i],[class*=signup i],
+[id*=register i],[class*=register i]) :is(button,[role=button],input[type=submit]){
+  min-height:49px!important;
+  border-radius:15px!important;
+}
+@media(min-width:720px){
+  main{padding:30px 28px 48px!important}
+  #projectsGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:17px!important}
+}
+@media(min-width:1080px){#projectsGrid{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+@media(max-width:370px){
+  main{padding-inline:11px!important}
+  nav[class~="lg:hidden"]{gap:2px!important;padding-inline:5px!important}
+  nav[class~="lg:hidden"]>button,
+  nav[class~="lg:hidden"]>.nav-btn-mobile{font-size:9px!important;gap:4px!important}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+}
