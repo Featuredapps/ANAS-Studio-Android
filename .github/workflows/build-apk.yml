@@ -559,16 +559,20 @@ jobs:
               raise SystemExit(f"Expected both Android save callbacks, found {count}")
           p.write_text(s.replace(old, new))
           PY
-          cp "$GITHUB_WORKSPACE/mobile-ui/mobile.css" "$(dirname "$HTML_FILE")/mobile.css"
-          HTML_FILE="$HTML_FILE" python3 - <<'PY'
+          HTML_FILE="$HTML_FILE" MOBILE_CSS="$GITHUB_WORKSPACE/mobile-ui/mobile.css" python3 - <<'PY'
           import os
           from pathlib import Path
           html = Path(os.environ["HTML_FILE"])
+          css = Path(os.environ["MOBILE_CSS"]).read_text()
           content = html.read_text()
           if "</head>" not in content:
               raise SystemExit("HTML head closing tag not found")
-          content = content.replace("</head>", '  <link rel="stylesheet" href="mobile.css">\n</head>', 1)
+          if "</style>" in css.lower():
+              raise SystemExit("Mobile CSS contains a closing style tag")
+          style = '<style id="anas-mobile-ui">\\n' + css + '\\n</style>\\n'
+          content = content.replace("</head>", style + "</head>", 1)
           html.write_text(content)
+          print(f"Inlined {len(css)} bytes of mobile CSS into the HTML update payload.")
           PY
           APP_GRADLE="$PROJECT_DIR/app/build.gradle" python3 - <<'PY'
           import os, re
