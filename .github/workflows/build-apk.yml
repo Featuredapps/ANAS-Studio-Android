@@ -396,7 +396,7 @@ jobs:
               }
           '''
           if "private void fetchRemoteUpdate()" not in s:
-              s=s.replace("    @Override protected void onActivityResult",methods+"\\n    @Override protected void onActivityResult",1)
+              s=s.replace("    @Override protected void onActivityResult",methods + chr(10) + "    @Override protected void onActivityResult",1)
           p.write_text(s)
           PY
           HTML_FILE="$(find "$PROJECT_DIR" -path '*/assets/index.html' -type f -print -quit)"
