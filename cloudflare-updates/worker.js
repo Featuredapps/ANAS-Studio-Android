@@ -52,7 +52,7 @@ export default {
     const m=await env.STUDIO_KV.get("published","json");
     if(!m?.key)return new Response("No web build published",{status:404});
     const html=await env.STUDIO_KV.get(m.key);
-    return html ? new Response(html,{headers:{...CORS,"Content-Type":"text/html; charset=utf-8","Cache-Control":"no-store","X-Studio-Version":String(m.version)}}) : new Response("Published build missing",{status:503});
+    return html ? new Response(html,{headers:{...CORS,"Content-Type":"text/html; charset=utf-8","Cache-Control":"no-store","X-Studio-Version":String(m.version),"X-Studio-SHA256":String(m.sha256||"")}}) : new Response("Published build missing",{status:503});
   }
   if(p==="/api/admin/login" && req.method==="POST") {
     if(!env.ADMIN_PASSWORD) return json({error:"ADMIN_PASSWORD secret is not configured"},503);
@@ -67,10 +67,10 @@ export default {
   }
   if(p==="/api/admin/publish" && req.method==="POST") {
     const body=await req.json().catch(()=>null);
-    if(!body || typeof body.html!=="string" || body.html.length>18000000) return json({error:"ملف HTML غير صالح أو أكبر من 18MB"},400);
+    if(!body || typeof body.html!=="string" || new TextEncoder().encode(body.html).length>18000000 || !/<\\s*html[\\s>]/i.test(body.html)) return json({error:"ملف HTML غير صالح أو أكبر من 18MB"},400);
     const version=Date.now(), key="build:"+version;
     await env.STUDIO_KV.put(key,body.html);
-    const manifest={version,key,notes:String(body.notes||"").slice(0,500),publishedAt:new Date().toISOString()};
+    const manifest={version,key,sha256:await digest(body.html),bytes:new TextEncoder().encode(body.html).length,published:true,notes:String(body.notes||"").slice(0,500),publishedAt:new Date().toISOString()};
     await env.STUDIO_KV.put("published",JSON.stringify(manifest));
     return json({ok:true,manifest});
   }
