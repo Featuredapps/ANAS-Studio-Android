@@ -331,7 +331,75 @@ jobs:
               s = s.replace(anchor, methods + anchor, 1)
           p.write_text(s)
           PY
-                    HTML_FILE="$(find "$PROJECT_DIR" -path '*/assets/index.html' -type f -print -quit)"
+                    MAIN_ACTIVITY="$(find "$PROJECT_DIR" -path '*/src/main/java/com/anasgdxj/studio/MainActivity.java' -type f -print -quit)"
+          MAIN_ACTIVITY="$MAIN_ACTIVITY" python3 - <<'PY'
+          import os
+          from pathlib import Path
+          p=Path(os.environ["MAIN_ACTIVITY"])
+          s=p.read_text()
+          imports=["import java.net.HttpURLConnection;","import java.net.URL;","import java.security.MessageDigest;","import java.io.ByteArrayInputStream;","import java.io.ByteArrayOutputStream;","import java.nio.charset.StandardCharsets;"]
+          for item in imports:
+              if item not in s: s=s.replace("import java.io.OutputStream;", "import java.io.OutputStream;\\n"+item,1)
+          s=s.replace('webView.loadUrl("https://appassets.androidplatform.net/assets/index.html");','''new Thread(() -> {
+                      fetchRemoteUpdate();
+                      runOnUiThread(() -> webView.loadUrl("https://appassets.androidplatform.net/assets/index.html"));
+                  }).start();''',1)
+          old='return assetLoader.shouldInterceptRequest(request.getUrl());'
+          new='''Uri uri=request.getUrl();
+                          if ("appassets.androidplatform.net".equals(uri.getHost()) && "/assets/index.html".equals(uri.getPath())) {
+                              File cached=new File(getFilesDir(),"remote-index.html");
+                              if (cached.isFile() && cached.length()>100 && cached.length()<18000000) {
+                                  try { return new WebResourceResponse("text/html","UTF-8",new java.io.FileInputStream(cached)); }
+                                  catch(Exception ignored) {}
+                              }
+                          }
+                          return assetLoader.shouldInterceptRequest(uri);'''
+          if old not in s: raise SystemExit("asset interception anchor missing")
+          s=s.replace(old,new,1)
+          methods=r'''
+              private void fetchRemoteUpdate() {
+                  HttpURLConnection c=null;
+                  try {
+                      c=(HttpURLConnection)new URL("https://anas-studio-android.anasgdxj.workers.dev/api/version").openConnection();
+                      c.setConnectTimeout(5000); c.setReadTimeout(7000); c.setUseCaches(false);
+                      if(c.getResponseCode()!=200)return;
+                      ByteArrayOutputStream b=new ByteArrayOutputStream();
+                      try(java.io.InputStream in=c.getInputStream()){ byte[] buf=new byte[4096]; int n; while((n=in.read(buf))!=-1){ if(b.size()+n>65536)return; b.write(buf,0,n); } }
+                      org.json.JSONObject m=new org.json.JSONObject(b.toString("UTF-8"));
+                      if(!m.optBoolean("published",false))return;
+                      long version=m.optLong("version",0); String hash=m.optString("sha256","");
+                      if(version<=0 || hash.length()!=64)return;
+                      File meta=new File(getFilesDir(),"remote-version.txt");
+                      if(meta.isFile() && meta.length()<100){ String old=new String(java.nio.file.Files.readAllBytes(meta.toPath()),StandardCharsets.UTF_8).trim(); if(old.equals(Long.toString(version)))return; }
+                      HttpURLConnection h=(HttpURLConnection)new URL("https://anas-studio-android.anasgdxj.workers.dev/app").openConnection();
+                      h.setConnectTimeout(7000); h.setReadTimeout(12000); h.setUseCaches(false);
+                      if(h.getResponseCode()!=200 || !h.getContentType().toLowerCase().contains("text/html")){h.disconnect();return;}
+                      ByteArrayOutputStream html=new ByteArrayOutputStream();
+                      try(java.io.InputStream in=h.getInputStream()){byte[] buf=new byte[8192];int n;while((n=in.read(buf))!=-1){if(html.size()+n>18000000){h.disconnect();return;}html.write(buf,0,n);}}
+                      h.disconnect();
+                      byte[] data=html.toByteArray();
+                      String actual=hex(MessageDigest.getInstance("SHA-256").digest(data));
+                      String header=h.getHeaderField("X-Studio-SHA256");
+                      if(!hash.equalsIgnoreCase(actual) || !hash.equalsIgnoreCase(header) || data.length<100)return;
+                      String text=new String(data,StandardCharsets.UTF_8).toLowerCase(java.util.Locale.ROOT);
+                      if(!text.contains("<html"))return;
+                      File tmp=new File(getFilesDir(),"remote-index.tmp"), dest=new File(getFilesDir(),"remote-index.html");
+                      try(FileOutputStream out=new FileOutputStream(tmp)){out.write(data);out.getFD().sync();}
+                      if(!tmp.renameTo(dest)){tmp.delete();return;}
+                      File mt=new File(getFilesDir(),"remote-version.tmp");
+                      try(FileOutputStream out=new FileOutputStream(mt)){out.write(Long.toString(version).getBytes(StandardCharsets.UTF_8));out.getFD().sync();}
+                      mt.renameTo(meta);
+                  } catch(Exception ignored) { } finally { if(c!=null)c.disconnect(); }
+              }
+              private String hex(byte[] data) {
+                  StringBuilder s=new StringBuilder(); for(byte v:data)s.append(String.format(java.util.Locale.ROOT,"%02x",v&255)); return s.toString();
+              }
+          '''
+          if "private void fetchRemoteUpdate()" not in s:
+              s=s.replace("    @Override protected void onActivityResult",methods+"\\n    @Override protected void onActivityResult",1)
+          p.write_text(s)
+          PY
+          HTML_FILE="$(find "$PROJECT_DIR" -path '*/assets/index.html' -type f -print -quit)"
           test -n "$HTML_FILE"
           python3 "$GITHUB_WORKSPACE/mobile-ui/enhance-script-editor.py" "$HTML_FILE"
           python3 "$GITHUB_WORKSPACE/mobile-ui/enhance-audio-persistence.py" "$HTML_FILE"
