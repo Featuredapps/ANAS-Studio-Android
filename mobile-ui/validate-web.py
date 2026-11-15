@@ -19,6 +19,9 @@ required = [
     "window.addEventListener('pagehide'",
     "PROJECT_AUDIO_STORE.set = function(projectId, audio)",
     "function startCompleteRender(",
+    "anasGeminiAssistant",
+    "function anasGeminiRun()",
+    "function anasGeminiSaveConfig()",
 ]
 missing = [item for item in required if item not in html]
 if missing:
@@ -40,4 +43,4 @@ if result.returncode:
     print(result.stdout)
     print(result.stderr)
     raise SystemExit(result.returncode)
-print(f"Validated {len(scripts)} inline script block(s); required studio features found.")
+print(f"Validated {len(scripts)} inline script block(s); required studio and Gemini features found.")
