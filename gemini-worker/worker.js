@@ -11,7 +11,7 @@
  * Deploy with: npx wrangler deploy
  */
 const cors = (origin, allowed) => ({
-  "Access-Control-Allow-Origin": allowed === "*" ? "*" : (origin === allowed ? allowed : "null"),
+  "Access-Control-Allow-Origin": origin === "null" ? "null" : (origin === allowed ? allowed : "null"),
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
   "Vary": "Origin"
@@ -25,14 +25,18 @@ export default {
     const url = new URL(request.url);
     if (url.pathname !== "/generate" || request.method !== "POST")
       return Response.json({error:"Not found"}, {status:404, headers});
-    if (origin && origin !== allowed)
+    if (origin && origin !== "null" && origin !== allowed)
       return Response.json({error:"Origin not allowed"}, {status:403, headers});
     if (!env.GEMINI_API_KEY || !env.APP_ACCESS_TOKEN)
       return Response.json({error:"Server is not configured"}, {status:503, headers});
     const auth = request.headers.get("Authorization") || "";
     const supplied = auth.startsWith("Bearer ") ? auth.slice(7) : "";
-    if (supplied.length !== env.APP_ACCESS_TOKEN.length ||
-        !crypto.subtle.timingSafeEqual(new TextEncoder().encode(supplied), new TextEncoder().encode(env.APP_ACCESS_TOKEN)))
+    const expected = env.APP_ACCESS_TOKEN;
+    let mismatch = supplied.length ^ expected.length;
+    const maxLength = Math.max(supplied.length, expected.length);
+    for (let i = 0; i < maxLength; i++)
+      mismatch |= (supplied.charCodeAt(i) || 0) ^ (expected.charCodeAt(i) || 0);
+    if (mismatch !== 0)
       return Response.json({error:"Unauthorized"}, {status:401, headers});
     let body;
     try { body = await request.json(); } catch {
