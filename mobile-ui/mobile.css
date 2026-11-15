@@ -493,3 +493,103 @@
   nav.lg\:hidden > .nav-btn-mobile svg,
   nav.lg\:hidden > button svg { width: 21px !important; height: 21px !important; }
 }
+
+
+/* ANAS Studio Android: deterministic navigation + authentication refresh.
+   These rules intentionally do not depend on a media query: WebView may report
+   a desktop-sized CSS viewport even on a phone. */
+nav.lg\\:hidden{
+  position:fixed!important;inset:auto 0 0 0!important;left:0!important;right:0!important;
+  top:auto!important;transform:none!important;z-index:1000!important;
+  display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;
+  gap:3px!important;width:100%!important;max-width:none!important;min-width:0!important;
+  height:calc(78px + env(safe-area-inset-bottom,0px))!important;
+  min-height:78px!important;box-sizing:border-box!important;
+  padding:7px 7px calc(7px + env(safe-area-inset-bottom,0px))!important;
+  margin:0!important;border:0!important;border-top:1px solid rgba(174,197,226,.18)!important;
+  border-radius:0!important;background:#0d1727!important;
+  box-shadow:0 -10px 28px rgba(0,0,0,.38)!important;
+  backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+}
+nav.lg\\:hidden::before{display:none!important;content:none!important}
+nav.lg\\:hidden>button,nav.lg\\:hidden>.nav-btn-mobile,nav.lg\\:hidden>[role=button]{
+  display:flex!important;position:relative!important;flex:initial!important;
+  width:100%!important;min-width:0!important;max-width:none!important;
+  height:62px!important;min-height:62px!important;margin:0!important;
+  padding:5px 1px!important;flex-direction:column!important;
+  align-items:center!important;justify-content:center!important;gap:5px!important;
+  border:1px solid transparent!important;border-radius:13px!important;
+  background:transparent!important;color:#9eacc0!important;
+  font-size:10px!important;font-weight:600!important;line-height:1.2!important;
+  white-space:nowrap!important;box-shadow:none!important;transform:none!important;
+}
+nav.lg\\:hidden>button svg,nav.lg\\:hidden>.nav-btn-mobile svg,nav.lg\\:hidden>[role=button] svg{
+  display:block!important;width:23px!important;height:23px!important;
+  min-width:23px!important;flex:0 0 23px!important;opacity:.92!important;
+}
+nav.lg\\:hidden>button.active,nav.lg\\:hidden>.nav-btn-mobile.active,
+nav.lg\\:hidden>button[aria-current=page],nav.lg\\:hidden>.nav-btn-mobile[aria-current=page],
+nav.lg\\:hidden>button[aria-selected=true],nav.lg\\:hidden>button[data-active=true]{
+  color:#f2c879!important;background:rgba(242,200,121,.1)!important;
+  border-color:rgba(242,200,121,.2)!important;
+}
+body{padding-bottom:calc(90px + env(safe-area-inset-bottom,0px))!important}
+main{padding-bottom:calc(108px + env(safe-area-inset-bottom,0px))!important}
+@media(max-width:370px){
+ nav.lg\\:hidden>button,nav.lg\\:hidden>.nav-btn-mobile{font-size:9px!important;gap:3px!important}
+}
+
+/* Login / registration screens: responsive premium panel, clear hierarchy and
+   visible focus/press feedback while leaving authentication logic untouched. */
+:is([id*=login i],[class*=login i],[id*=auth i],[class*=auth i],
+    [id*=signin i],[class*=signin i],[id*=signup i],[class*=signup i],
+    [id*=register i],[class*=register i]){
+  color:var(--text);
+}
+:is([id*=login i],[class*=login i],[id*=auth i],[class*=auth i],
+    [id*=signin i],[class*=signin i],[id*=signup i],[class*=signup i],
+    [id*=register i],[class*=register i]){
+  scrollbar-width:thin;
+}
+:is([id*=login i],[class*=login i],[id*=auth i],[class*=auth i],
+    [id*=signin i],[class*=signin i],[id*=signup i],[class*=signup i],
+    [id*=register i],[class*=register i]) :is(input,select,textarea){
+  width:100%!important;min-height:50px!important;padding:12px 15px!important;
+  border:1px solid rgba(174,197,226,.22)!important;border-radius:15px!important;
+  background:linear-gradient(145deg,#0d1726,#111e30)!important;color:#f4f6fb!important;
+  outline:none!important;transition:border-color .2s ease,box-shadow .2s ease,background .2s ease!important;
+}
+:is([id*=login i],[class*=login i],[id*=auth i],[class*=auth i],
+    [id*=signin i],[class*=signin i],[id*=signup i],[class*=signup i],
+    [id*=register i],[class*=register i]) :is(input,select,textarea):focus{
+  border-color:rgba(233,189,112,.78)!important;
+  box-shadow:0 0 0 4px rgba(233,189,112,.11),0 8px 24px rgba(0,0,0,.18)!important;
+  background:#101c2d!important;
+}
+:is([id*=login i],[class*=login i],[id*=auth i],[class*=auth i],
+    [id*=signin i],[class*=signin i],[id*=signup i],[class*=signup i],
+    [id*=register i],[class*=register i]) :is(button,[role=button],input[type=submit]){
+  min-height:48px!important;border-radius:15px!important;font-weight:750!important;
+  transition:transform .18s ease,filter .18s ease,box-shadow .18s ease!important;
+}
+:is([id*=login i],[class*=login i],[id*=auth i],[class*=auth i],
+    [id*=signin i],[class*=signin i],[id*=signup i],[class*=signup i],
+    [id*=register i],[class*=register i]) :is(button,[role=button],input[type=submit]):active{
+  transform:scale(.975)!important;filter:brightness(1.08)!important;
+}
+:is([id*=login i],[class*=login i],[id*=auth i],[class*=auth i],
+    [id*=signin i],[class*=signin i],[id*=signup i],[class*=signup i],
+    [id*=register i],[class*=register i]) :is(h1,h2,h3){
+  color:#f7f8fc!important;letter-spacing:-.35px!important;line-height:1.35!important;
+}
+:is([id*=login i],[class*=login i],[id*=auth i],[class*=auth i],
+    [id*=signin i],[class*=signin i],[id*=signup i],[class*=signup i],
+    [id*=register i],[class*=register i]) :is(label,p,small){
+  color:#aab8cb;
+}
+@keyframes authPanelEnter{from{opacity:0;transform:translateY(14px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media(prefers-reduced-motion:no-preference){
+ :is([id*=login i],[class*=login i],[id*=auth i],[class*=auth i],
+     [id*=signin i],[class*=signin i],[id*=signup i],[class*=signup i],
+     [id*=register i],[class*=register i]){animation:authPanelEnter .38s cubic-bezier(.2,.7,.25,1) both}
+}
