@@ -438,19 +438,19 @@ jobs:
           p.write_text(s)
           PY
           cd "$PROJECT_DIR"
-          gradle --no-daemon assembleDebug
-          APK="app/build/outputs/apk/debug/app-debug.apk"
+          gradle --no-daemon assembleRelease
+          APK="app/build/outputs/apk/release/app-release-unsigned.apk"
           test -s "$APK"
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" sign --ks "$KEYSTORE_FILE" --ks-key-alias "$ANDROID_KEY_ALIAS" --ks-pass env:ANDROID_KEYSTORE_PASSWORD --key-pass env:ANDROID_KEY_PASSWORD --out "$RUNNER_TEMP/anas-studio-signed.apk" "$APK"
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose "$RUNNER_TEMP/anas-studio-signed.apk"
-          install -D "$RUNNER_TEMP/anas-studio-signed.apk" "$GITHUB_WORKSPACE/app-debug.apk"
+          install -D "$RUNNER_TEMP/anas-studio-signed.apk" "$GITHUB_WORKSPACE/app-release.apk"
 
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: ANAS-Studio-APK
-          path: app-debug.apk
+          path: app-release.apk
           if-no-files-found: error
           retention-days: 7
 
@@ -485,7 +485,7 @@ jobs:
             Commit: ${{ github.sha }}
             Changes: ${{ github.event.head_commit.message || 'Manual build' }}
             يتم تحديث رابط APK الثابت بعد نجاح البناء.
-          files: app-debug.apk
+          files: app-release.apk
           overwrite_files: true
           make_latest: true
           draft: false
