@@ -365,3 +365,131 @@
   nav.lg\\:hidden>button,
   nav.lg\\:hidden>[role="button"]{font-size:9px!important}
 }
+
+
+/* Android bottom navigation — full-width Material-style dock (final override). */
+@media (max-width: 700px) {
+  body { padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px)) !important; }
+
+  nav.lg\\:hidden {
+    position: fixed !important;
+    inset-inline: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    top: auto !important;
+    transform: none !important;
+    z-index: 100 !important;
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+    gap: 2px !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    height: calc(76px + env(safe-area-inset-bottom, 0px)) !important;
+    min-height: 76px !important;
+    box-sizing: border-box !important;
+    padding: 7px 8px calc(7px + env(safe-area-inset-bottom, 0px)) !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    border: 0 !important;
+    border-top: 1px solid rgba(177, 195, 220, .14) !important;
+    border-radius: 0 !important;
+    background: #101a2a !important;
+    box-shadow: 0 -8px 28px rgba(0, 0, 0, .28) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  nav.lg\\:hidden::before { display: none !important; content: none !important; }
+
+  nav.lg\\:hidden > .nav-btn-mobile,
+  nav.lg\\:hidden > button,
+  nav.lg\\:hidden > [role="button"] {
+    position: relative !important;
+    display: flex !important;
+    flex: none !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    justify-self: stretch !important;
+    align-self: stretch !important;
+    gap: 5px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    height: 62px !important;
+    min-height: 62px !important;
+    margin: 0 !important;
+    padding: 5px 1px !important;
+    overflow: visible !important;
+    border: 1px solid transparent !important;
+    border-radius: 14px !important;
+    background: transparent !important;
+    color: #9aaac0 !important;
+    font-size: 10px !important;
+    font-weight: 550 !important;
+    line-height: 1.15 !important;
+    letter-spacing: 0 !important;
+    white-space: nowrap !important;
+    text-align: center !important;
+    box-shadow: none !important;
+    transform: none !important;
+    transition: color .18s ease, background .18s ease, border-color .18s ease !important;
+  }
+
+  nav.lg\\:hidden > .nav-btn-mobile svg,
+  nav.lg\\:hidden > button svg,
+  nav.lg\\:hidden > [role="button"] svg {
+    display: block !important;
+    width: 23px !important;
+    height: 23px !important;
+    min-width: 23px !important;
+    min-height: 23px !important;
+    flex: 0 0 23px !important;
+    color: currentColor !important;
+    opacity: .9 !important;
+    stroke-width: 1.9 !important;
+  }
+
+  nav.lg\\:hidden > .nav-btn-mobile.active,
+  nav.lg\\:hidden > .nav-btn-mobile[aria-current="page"],
+  nav.lg\\:hidden > .nav-btn-mobile[aria-selected="true"],
+  nav.lg\\:hidden > .nav-btn-mobile[data-active="true"],
+  nav.lg\\:hidden > button.active,
+  nav.lg\\:hidden > button[aria-current="page"],
+  nav.lg\\:hidden > [role="button"].active,
+  nav.lg\\:hidden > [role="button"][aria-current="page"] {
+    color: #f2c879 !important;
+    background: rgba(242, 200, 121, .09) !important;
+    border-color: rgba(242, 200, 121, .16) !important;
+    box-shadow: none !important;
+  }
+
+  nav.lg\\:hidden > .nav-btn-mobile.active svg,
+  nav.lg\\:hidden > .nav-btn-mobile[aria-current="page"] svg,
+  nav.lg\\:hidden > button.active svg,
+  nav.lg\\:hidden > button[aria-current="page"] svg {
+    opacity: 1 !important;
+    stroke-width: 2.2 !important;
+  }
+
+  nav.lg\\:hidden > .nav-btn-mobile:active,
+  nav.lg\\:hidden > button:active,
+  nav.lg\\:hidden > [role="button"]:active {
+    transform: scale(.96) !important;
+  }
+}
+
+@media (max-width: 360px) {
+  nav.lg\\:hidden > .nav-btn-mobile,
+  nav.lg\\:hidden > button,
+  nav.lg\\:hidden > [role="button"] {
+    font-size: 9px !important;
+    gap: 4px !important;
+  }
+  nav.lg\\:hidden > .nav-btn-mobile svg,
+  nav.lg\\:hidden > button svg { width: 21px !important; height: 21px !important; }
+}
