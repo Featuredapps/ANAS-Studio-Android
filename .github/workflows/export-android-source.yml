@@ -1,6 +1,11 @@
 name: Export ANAS Studio Android Source
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/export-android-source.yml'
+      - 'ANAS-Studio-Android-Project.zip'
   workflow_dispatch:
 
 permissions:
