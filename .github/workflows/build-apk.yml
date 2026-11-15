@@ -375,11 +375,17 @@ jobs:
               "    Uri uri = request.getUrl();",
               '    if ("appassets.androidplatform.net".equals(uri.getHost()) && "/assets/index.html".equals(uri.getPath())) {',
               '        File cached = new File(getFilesDir(), "remote-index.html");',
-              "        if (cached.isFile() && cached.length() > 100 && cached.length() <= 18000000) {",
+              '        File cachedHash = new File(getFilesDir(), "remote-sha256.txt");',
+              '        File cachedVersion = new File(getFilesDir(), "remote-version.txt");',
+              "        if (cached.isFile() && cached.length() > 100 && cached.length() <= 18000000 && cachedHash.isFile() && cachedVersion.isFile()) {",
               "            try {",
-              '                return new WebResourceResponse("text/html", "UTF-8", new java.io.FileInputStream(cached));',
+              "                String expectedHash = new String(Files.readAllBytes(cachedHash.toPath()), StandardCharsets.UTF_8).trim();",
+              "                String actualHash = toHex(MessageDigest.getInstance(\"SHA-256\").digest(Files.readAllBytes(cached.toPath())));",
+              "                if (expectedHash.matches(\"(?i)[0-9a-f]{64}\") && expectedHash.equalsIgnoreCase(actualHash)) {",
+              '                    return new WebResourceResponse("text/html", "UTF-8", new java.io.FileInputStream(cached));',
+              "                }",
               "            } catch (Exception e) {",
-              '                Log.w("ANASStudioUpdates", "Cached web build could not be opened; using bundled assets", e);',
+              '                Log.w("ANASStudioUpdates", "Cached web build failed integrity check; using bundled assets", e);',
               "            }",
               "        }",
               "    }",
@@ -388,8 +394,149 @@ jobs:
           ]
           replacement = "\n".join(indent + line for line in lines)
           s = s[:match.start()] + replacement + s[match.end():]
+
+          if "private volatile boolean activityDestroyed" not in s:
+              anchor_field = "    private SecureKeyStore keyStore;"
+              if anchor_field not in s:
+                  raise SystemExit("MainActivity.java: SecureKeyStore field anchor not found")
+              s = s.replace(anchor_field, anchor_field + "\n    private volatile boolean activityDestroyed = false;", 1)
+
+          load_anchor = '        webView.loadUrl("https://appassets.androidplatform.net/assets/index.html");'
+          if load_anchor not in s:
+              raise SystemExit("MainActivity.java: initial bundled WebView load was not found")
+          s = s.replace(load_anchor, load_anchor + "\n        startRemoteUpdateCheck();", 1)
+
+          methods = r'''
+              private static final String UPDATE_BASE_URL = "https://anas-studio-android.anasgdxj.workers.dev";
+
+              private void startRemoteUpdateCheck() {
+                  Thread updateThread = new Thread(() -> {
+                      HttpURLConnection versionConnection = null;
+                      HttpURLConnection appConnection = null;
+                      try {
+                          versionConnection = (HttpURLConnection) new URL(UPDATE_BASE_URL + "/api/version").openConnection();
+                          versionConnection.setRequestMethod("GET");
+                          versionConnection.setConnectTimeout(10000);
+                          versionConnection.setReadTimeout(12000);
+                          versionConnection.setUseCaches(false);
+                          versionConnection.setRequestProperty("Accept", "application/json");
+                          if (versionConnection.getResponseCode() != HttpURLConnection.HTTP_OK) return;
+                          byte[] manifestBytes = readBounded(versionConnection.getInputStream(), 65536);
+                          org.json.JSONObject manifest = new org.json.JSONObject(new String(manifestBytes, StandardCharsets.UTF_8));
+                          if (!manifest.optBoolean("published", false)) return;
+                          long version = manifest.optLong("version", 0L);
+                          long expectedBytes = manifest.optLong("bytes", -1L);
+                          String expectedHash = manifest.optString("sha256", "").trim().toLowerCase(Locale.ROOT);
+                          if (version <= 0 || expectedBytes < 101 || expectedBytes > 18000000 ||
+                              !expectedHash.matches("[0-9a-f]{64}")) return;
+
+                          File cachedHtml = new File(getFilesDir(), "remote-index.html");
+                          File cachedVersion = new File(getFilesDir(), "remote-version.txt");
+                          File cachedHash = new File(getFilesDir(), "remote-sha256.txt");
+                          if (cachedHtml.isFile() && cachedHtml.length() == expectedBytes &&
+                              cachedVersion.isFile() && cachedHash.isFile()) {
+                              String currentVersion = new String(Files.readAllBytes(cachedVersion.toPath()), StandardCharsets.UTF_8).trim();
+                              String currentHash = new String(Files.readAllBytes(cachedHash.toPath()), StandardCharsets.UTF_8).trim();
+                              String actualCachedHash = toHex(MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(cachedHtml.toPath())));
+                              if (Long.toString(version).equals(currentVersion) &&
+                                  expectedHash.equals(currentHash) && expectedHash.equals(actualCachedHash)) return;
+                          }
+
+                          appConnection = (HttpURLConnection) new URL(UPDATE_BASE_URL + "/app").openConnection();
+                          appConnection.setRequestMethod("GET");
+                          appConnection.setConnectTimeout(10000);
+                          appConnection.setReadTimeout(20000);
+                          appConnection.setUseCaches(false);
+                          if (appConnection.getResponseCode() != HttpURLConnection.HTTP_OK) return;
+                          String contentType = appConnection.getContentType();
+                          String responseVersion = appConnection.getHeaderField("X-Studio-Version");
+                          String responseHash = appConnection.getHeaderField("X-Studio-SHA256");
+                          if (contentType == null || !contentType.toLowerCase(Locale.ROOT).startsWith("text/html") ||
+                              !Long.toString(version).equals(responseVersion) ||
+                              responseHash == null || !expectedHash.equalsIgnoreCase(responseHash.trim())) return;
+
+                          byte[] html = readBounded(appConnection.getInputStream(), (int) expectedBytes);
+                          if (html.length != expectedBytes ||
+                              !expectedHash.equals(toHex(MessageDigest.getInstance("SHA-256").digest(html)))) return;
+                          String htmlText = new String(html, StandardCharsets.UTF_8).toLowerCase(Locale.ROOT);
+                          if (!htmlText.contains("<html")) return;
+
+                          File htmlTemp = new File(getFilesDir(), "remote-index.tmp");
+                          File versionTemp = new File(getFilesDir(), "remote-version.tmp");
+                          File hashTemp = new File(getFilesDir(), "remote-sha256.tmp");
+                          writeSynced(htmlTemp, html);
+                          writeSynced(versionTemp, Long.toString(version).getBytes(StandardCharsets.UTF_8));
+                          writeSynced(hashTemp, expectedHash.getBytes(StandardCharsets.UTF_8));
+                          replaceAtomically(hashTemp, cachedHash);
+                          replaceAtomically(versionTemp, cachedVersion);
+                          replaceAtomically(htmlTemp, cachedHtml);
+
+                          if (!activityDestroyed) {
+                              runOnUiThread(() -> {
+                                  if (!activityDestroyed && webView != null) webView.reload();
+                              });
+                          }
+                      } catch (Exception e) {
+                          Log.w("ANASStudioUpdates", "Remote update unavailable; keeping the local or cached version", e);
+                      } finally {
+                          if (versionConnection != null) versionConnection.disconnect();
+                          if (appConnection != null) appConnection.disconnect();
+                      }
+                  }, "ANASStudio-Update");
+                  updateThread.setDaemon(true);
+                  updateThread.start();
+              }
+
+              private byte[] readBounded(java.io.InputStream input, int maxBytes) throws Exception {
+                  try (java.io.InputStream in = input; ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+                      byte[] buffer = new byte[8192];
+                      int total = 0;
+                      int count;
+                      while ((count = in.read(buffer)) != -1) {
+                          total += count;
+                          if (total > maxBytes || total > 18000000) throw new java.io.IOException("Remote response exceeds the permitted size");
+                          out.write(buffer, 0, count);
+                      }
+                      return out.toByteArray();
+                  }
+              }
+
+              private void writeSynced(File file, byte[] data) throws Exception {
+                  try (FileOutputStream out = new FileOutputStream(file)) {
+                      out.write(data);
+                      out.flush();
+                      out.getFD().sync();
+                  }
+              }
+
+              private void replaceAtomically(File source, File destination) throws Exception {
+                  try {
+                      Files.move(source.toPath(), destination.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+                  } catch (AtomicMoveNotSupportedException e) {
+                      Files.move(source.toPath(), destination.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                  }
+              }
+
+              private String toHex(byte[] bytes) {
+                  StringBuilder result = new StringBuilder(bytes.length * 2);
+                  for (byte value : bytes) result.append(String.format(Locale.ROOT, "%02x", value & 0xff));
+                  return result.toString();
+              }
+
+          '''
+          if "private void startRemoteUpdateCheck()" not in s:
+              anchor_method = "    @Override protected void onActivityResult"
+              if anchor_method not in s:
+                  raise SystemExit("MainActivity.java: activity-result insertion point not found")
+              s = s.replace(anchor_method, methods + anchor_method, 1)
+
+          destroy_anchor = "    @Override protected void onDestroy() {"
+          if destroy_anchor not in s:
+              raise SystemExit("MainActivity.java: onDestroy method not found")
+          s = s.replace(destroy_anchor, destroy_anchor + "\n        activityDestroyed = true;", 1)
+
           p.write_text(s)
-          print("Verified MainActivity.java: bundled-first startup, Cloudflare version check, SHA-256 validation, atomic cache, offline fallback.")
+          print("Installed Cloudflare update client with SHA-256 validation, atomic cache replacement and bundled offline fallback.")
           PY
           HTML_FILE="$(find "$PROJECT_DIR" -path '*/assets/index.html' -type f -print -quit)"
           test -n "$HTML_FILE"
