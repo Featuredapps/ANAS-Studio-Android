@@ -99,12 +99,13 @@ function renderReleaseInfo(){
   if(!d){document.getElementById('version').textContent=ar?'الإصدار: تعذر تحميل البيانات':'Version: unavailable';return}
   const asset=(d.assets||[]).find(a=>a.name==='app-release.apk')||(d.assets||[])[0];
   document.getElementById('version').textContent=(ar?'الإصدار: ':'Version: ')+(d.name||d.tag_name||'latest');
+  const downloadButton=document.querySelector('.download-panel a.btn-primary');if(downloadButton)downloadButton.href=(asset&&asset.browser_download_url)||'https://github.com/Featuredapps/ANAS-Studio-Android/releases/latest/download/app-release.apk';
   const date=d.published_at?new Date(d.published_at).toLocaleDateString(ar?'ar':'en',{year:'numeric',month:'long',day:'numeric'}):'—';
   document.getElementById('release-date').textContent=(ar?'تاريخ التحديث: ':'Updated: ')+date;
   const size=asset&&Number.isFinite(asset.size)?(asset.size/1048576).toFixed(2)+' MB':'—';
   document.getElementById('apk-size').textContent=(ar?'حجم APK: ':'APK size: ')+size;
   const notes=document.getElementById('release-notes'),body=(d.body||'').trim();
-  if(body){document.getElementById('release-body').textContent=body;notes.hidden=false}else{notes.hidden=true}
+  if(body){const releaseBody=document.getElementById('release-body');releaseBody.textContent=body;releaseBody.style.whiteSpace='pre-line';notes.hidden=false}else{notes.hidden=true}
   document.getElementById('release-link').href=d.html_url||'https://github.com/Featuredapps/ANAS-Studio-Android/releases/latest';
 }
 function setLang(lang){
