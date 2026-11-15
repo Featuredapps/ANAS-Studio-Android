@@ -612,6 +612,14 @@ jobs:
                 await github.rest.repos.deleteRelease({ owner, repo, release_id: release.id });
                 core.info(`Deleted old release: ${release.tag_name}`);
               }
+              if (release.tag_name === 'latest') {
+                for (const asset of (release.assets || [])) {
+                  if (asset.name !== 'app-release.apk') {
+                    await github.rest.repos.deleteReleaseAsset({ owner, repo, asset_id: asset.id });
+                    core.info(`Removed obsolete release asset: ${asset.name}`);
+                  }
+                }
+              }
             }
             const artifacts = await github.paginate(github.rest.actions.listArtifactsForRepo, { owner, repo, per_page: 100 });
             for (const artifact of artifacts) {
