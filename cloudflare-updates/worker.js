@@ -1,3 +1,4 @@
+// Compatibility deployment: keep the legacy endpoint working for already-installed Android clients.
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
