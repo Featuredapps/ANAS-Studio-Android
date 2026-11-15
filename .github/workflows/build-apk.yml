@@ -718,17 +718,25 @@ jobs:
               }
             }
 
+      - name: Generate automatic release notes
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            printf 'إصدار تلقائي لتطبيق ANAS Studio.\n'
+            printf 'رقم البناء: %s\n' "$GITHUB_RUN_NUMBER"
+            printf 'تاريخ التحديث: %s\n' "$(date -u +'%Y-%m-%d %H:%M UTC')"
+            printf 'Commit: %s\n\n' "$GITHUB_SHA"
+            printf 'أبرز التغييرات:\n'
+            git log -8 --no-merges --pretty=format:'- %s' "$GITHUB_SHA"
+            printf '\n'
+          } > release-notes.md
       - name: Publish latest APK release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest
           name: ANAS Studio - Build #${{ github.run_number }}
-          body: |
-            إصدار بناء تلقائي لتطبيق ANAS Studio.
-            رقم البناء: ${{ github.run_number }}
-            Commit: ${{ github.sha }}
-            Changes: ${{ github.event.head_commit.message || 'Manual build' }}
-            يتم تحديث رابط APK الثابت بعد نجاح البناء.
+          body_path: release-notes.md
           files: app-release.apk
           overwrite_files: true
           make_latest: true
